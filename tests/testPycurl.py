@@ -15,7 +15,7 @@ git clone https://github.com/todor-ivanov/auxiliary.git
 git clone https://github.com/dmwm/WMCore.git
 
 cd auxiliary/tests
-ln -s ../../WMCore
+ln -s ../../WMCore/src/python/WMCore
 
 externalsList="
 http://cmsrep.cern.ch/cmssw/repos/comp/slc7_amd64_gcc630/0000000000000000000000000000000000000000000000000000000000000000/RPMS/4c/4c03fda0be1e3bf4a2ce613e219f1f9d/external+py2-pycurl+7.19.3-comp2-1-1.slc7_amd64_gcc630.rpm
@@ -27,8 +27,19 @@ mkdir external
 cd external
 for i in \$externalsList; do wget \$i; done
 for i in *.rpm ; do rpm2cpio \$i |cpio -idmv; done
-cd ../
 EOF
+
+Execute the testPycurl.py:
+
+$ tmp/auxiliary/tests/testPycurl.py
+
+The script will print the (py|lib)curl versions and a PID to trace.
+Trace from a separate terminal:
+
+$ strace -f -p <PID from previous shell>
+
+In the trace watch for lines mentioning opening of the 'nscd' socket at:
+/var/run/nscd/socket
 """
 
 import os, sys
