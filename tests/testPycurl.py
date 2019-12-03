@@ -52,8 +52,9 @@ print("PID: %s" % os.getpid())
 useExternals=True
 
 if useExternals is True:
-    externalPath='./external/build/dmwmbld/srv/state/dmwmbld/builds/comp_gcc630/w/\
-slc7_amd64_gcc630/external/'
+    defPath=os.path.abspath(os.path.dirname(__file__))
+    externalPath=os.path.join(defPath,
+                              'external/build/dmwmbld/srv/state/dmwmbld/builds/comp_gcc630/w/slc7_amd64_gcc630/external/')
     pycurlPath =os.path.join(externalPath,
                              'py2-pycurl/7.19.3-comp2/lib/python2.7/site-packages/')
     libcurlPath=os.path.join(externalPath,
