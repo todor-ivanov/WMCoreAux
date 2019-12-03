@@ -1,0 +1,15 @@
+# ignore emacs temp files:
+*~
+\#*\#
+
+# ignore clones or symlinks to WMCore inside the auxiliary repository:
+/WMCore
+/tests/WMCore
+
+# ignore external libraries:
+/external
+/tests/external
+
+# ingore temp dirs:
+/tmp
+/tests/tmp
