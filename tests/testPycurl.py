@@ -8,9 +8,6 @@ libraries from the cms repository. Execute the following short script:
 
 $ /bin/bash <<EOF
 
-mkdir tmp
-cd tmp
-
 git clone https://github.com/todor-ivanov/auxiliary.git
 git clone https://github.com/dmwm/WMCore.git
 
@@ -57,13 +54,29 @@ if useExternals is True:
                               'external/build/dmwmbld/srv/state/dmwmbld/builds/comp_gcc630/w/slc7_amd64_gcc630/external/')
     pycurlPath =os.path.join(externalPath,
                              'py2-pycurl/7.19.3-comp2/lib/python2.7/site-packages/')
+    externalPath2=os.path.join(defPath,
+                               'external/build/amaltaro/w/slc7_amd64_gcc630/external/')
+    pycurlPath2=os.path.join(externalPath2,
+                             'py2-pycurl/7.43.0.3-comp/lib/python2.7/site-packages/')
     libcurlPath=os.path.join(externalPath,
                              'curl/7.35.0-comp/lib/')
     opensslPath=os.path.join(externalPath,
                              'openssl/1.0.1r-comp/lib/')
     caresPath  =os.path.join(externalPath,
                              'c-ares/1.10.0/lib/')
+    # pycurlPath=pycurlPath2
+
+    try:
+        os.stat(pycurlPath)
+        os.stat(libcurlPath)
+        os.stat(opensslPath)
+        os.stat(caresPath)
+    except os.error as e:
+        print("missing path detected: %s" % e)
+        exit(2)
+
     ld_library_path=libcurlPath + ':' + opensslPath + ':' + caresPath
+
 
 if 'LD_LIBRARY_PATH' not in os.environ:
     try:
@@ -89,13 +102,19 @@ else:
 from WMCore.Services.pycurl_manager import RequestHandler
 from pycurl import version_info, version
 
-# print('cwd: %s' % os.getcwd())
-# print('LD_LIBRARY_PATH: %s' % os.environ['LD_LIBRARY_PATH'])
-# print('PYTHONPATH:' % (sys.path))
+#  print('cwd: %s' % os.getcwd())
+print('LD_LIBRARY_PATH: %s' % os.environ['LD_LIBRARY_PATH'])
+print('PYTHONPATH: %s' % (sys.path))
+print('pycurlPath: %s' % pycurlPath)
 # print("curl version_info is:")
 # pprint(version_info())
+print('========================================================================')
 print('pycurl version: %s' % version)
-
+print('========================================================================')
+lddCmd="/usr/bin/ldd " +  os.path.join(pycurlPath, 'pycurl.so')
+print('pycurl linked to: ')
+print(lddCmd)
+os.system(lddCmd)
 
 url='https://cmsweb-testbed.cern.ch/reqmgr2/requests?status=rejected'
 params={}
