@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 """
 A simple test function for debugging the wrong behaviour of 'pycurl' which ignores
 the 'nscd' cache for DNS lookup.
@@ -13,6 +13,7 @@ git clone https://github.com/dmwm/WMCore.git
 
 cd auxiliary/tests
 ln -s ../../WMCore/src/python/WMCore
+mkdir tmp/
 
 externalsList="
 http://cmsrep.cern.ch/cmssw/repos/comp/slc7_amd64_gcc630/0000000000000000000000000000000000000000000000000000000000000000/RPMS/4c/4c03fda0be1e3bf4a2ce613e219f1f9d/external+py2-pycurl+7.19.3-comp2-1-1.slc7_amd64_gcc630.rpm
@@ -27,8 +28,8 @@ for i in *.rpm ; do rpm2cpio \$i |cpio -idmv; done
 EOF
 
 Execute the testPycurl.py:
-
-$ tmp/auxiliary/tests/testPycurl.py
+$ cd auxiliary/tests/tmp/
+$ ../testPycurl.py
 
 The script will print the (py|lib)curl versions and a PID to trace.
 Trace from a separate terminal:
@@ -43,13 +44,30 @@ import os, sys
 import json
 import pdb
 from pprint import pprint
+from pprint import pformat
 from time import sleep
+
+print('\n========================================================================')
 print("PID: %s" % os.getpid())
 
 useExternals=True
 
+import inspect
+
+def dummyFun():
+    pass
+
+# defPath=os.path.abspath(os.path.dirname(__file__))
+defPath=os.path.abspath(os.path.dirname(inspect.getfile(dummyFun)))
+defFile=os.path.abspath(inspect.getfile(dummyFun))
+sys.path.insert(0, defPath)
+
+print("Current call: %s" % sys.argv)
+print('cwd: %s' % os.getcwd())
+print('PYTHONPATH: %s' % pformat(sys.path))
+print('========================================================================')
+
 if useExternals is True:
-    defPath=os.path.abspath(os.path.dirname(__file__))
     externalPath=os.path.join(defPath,
                               'external/build/dmwmbld/srv/state/dmwmbld/builds/comp_gcc630/w/slc7_amd64_gcc630/external/')
     pycurlPath =os.path.join(externalPath,
@@ -65,7 +83,6 @@ if useExternals is True:
     caresPath  =os.path.join(externalPath,
                              'c-ares/1.10.0/lib/')
     # pycurlPath=pycurlPath2
-
     try:
         os.stat(pycurlPath)
         os.stat(libcurlPath)
@@ -73,10 +90,8 @@ if useExternals is True:
         os.stat(caresPath)
     except os.error as e:
         print("missing path detected: %s" % e)
-        exit(2)
-
+        sys.exit(2)
     ld_library_path=libcurlPath + ':' + opensslPath + ':' + caresPath
-
 
 if 'LD_LIBRARY_PATH' not in os.environ:
     try:
@@ -86,7 +101,9 @@ if 'LD_LIBRARY_PATH' not in os.environ:
     else:
         os.environ['LD_LIBRARY_PATH'] = ld_library_path
         try:
-            os.execv(sys.argv[0], sys.argv)
+            print('re-exec:')
+            # os.execv(sys.argv[0], sys.argv)
+            os.execv(defFile, sys.argv)
         except Exception, exc:
             print('Failed re-exec: %s' % exc)
             sys.exit(1)
@@ -100,21 +117,22 @@ else:
         sys.path.insert(0, pycurlPath)
 
 from WMCore.Services.pycurl_manager import RequestHandler
-from pycurl import version_info, version
+import pycurl
 
-#  print('cwd: %s' % os.getcwd())
-print('LD_LIBRARY_PATH: %s' % os.environ['LD_LIBRARY_PATH'])
-print('PYTHONPATH: %s' % (sys.path))
-print('pycurlPath: %s' % pycurlPath)
-# print("curl version_info is:")
-# pprint(version_info())
 print('========================================================================')
-print('pycurl version: %s' % version)
+print('pycurl version: %s' % pycurl.version)
+print(inspect.getmodule(pycurl))
+print(inspect.getfile(pycurl))
 print('========================================================================')
-lddCmd="/usr/bin/ldd " +  os.path.join(pycurlPath, 'pycurl.so')
+# lddCmd="/usr/bin/ldd " +  os.path.join(pycurlPath, 'pycurl.so')
+lddCmd="/usr/bin/ldd " +  inspect.getfile(pycurl)
 print('pycurl linked to: ')
 print(lddCmd)
 os.system(lddCmd)
+
+if 'LD_LIBRARY_PATH' in os.environ:
+    print('LD_LIBRARY_PATH: %s' % pformat(os.environ['LD_LIBRARY_PATH']))
+    print('pycurlPath: %s' % pformat(pycurlPath))
 
 url='https://cmsweb-testbed.cern.ch/reqmgr2/requests?status=rejected'
 params={}
