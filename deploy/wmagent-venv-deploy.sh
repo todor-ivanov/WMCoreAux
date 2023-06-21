@@ -3,12 +3,12 @@
 help(){
     echo -e $1
     cat <<EOF
-    Usage: deploy-centralvenv.sh [-c <central_services_url>] [-s] [-n] [-v] [-y]
-                                 [-r <wmcore_source_repository>] [-b <wmcore_source_branch>] [-t <wmcore_tag>]
-                                 [-g <wmcore_config_repository>] [-d <wmcore_config_branch>]
-                                 [-d wmcore_path] [-p <patches>] [-m <security string>]
-                                 [-l <service_list>] [-i <pypi_index>]
-                                 [-h <help>]
+    Usage: wmagent-venv-deploy.sh [-s] [-n] [-v] [-y]
+                                  [-r <wmcore_source_repository>] [-b <wmcore_source_branch>] [-t <wmcore_tag>]
+                                  [-g <wmcore_config_repository>] [-d <wmcore_config_branch>]
+                                  [-d wmcore_path] [-p <patches>] [-m <security string>]
+                                  [-l <service_list>] [-i <pypi_index>]
+                                  [-h <help>]
 
       -s  <run_from_source>          Bool flag to setup run from source [Default: false]
       -n  <no_venv_cleanup>          Bool flag to skip virtual environment space cleanup before deployment [Default: false - ALWAYS cleanup before deployment]
@@ -20,43 +20,33 @@ help(){
       -d  <wmagent_path>             WMAgent virtual environment target path to be used for this deployment [Default: ./WMAgent.venv3]
       -h <help>                      Provides help to the current script
 
-    # Example: Deploy WMCore central services version 2.0.3rc1 linked with 'cmsweb-test1.cern.ch' as a frontend from 'test' pypi index
-    #          at destination /data/tmp/WMCore.venv3/ and using 'Some security string' as a security string for operationss at runtime:
-    # ./deploy-centralvenv.sh -c cmsweb-test1.cern.ch -i test -l wmcore==2.0.3rc1 -d /data/tmp/WMCore.venv3/ -m "Some security string"
+    # Example: Deploy WMAgent version 2.0.3rc1 from 'test' pypi index
+    #          at destination /data/tmp/WMAgent.venv3/ and using 'Some security string' as a security string for operationss at runtime:
+    # ./wmagent-venv-deploy.sh -i test -l wmcore==2.0.3rc1 -d /data/tmp/WMAgent.venv3/ -m "Some security string"
 
     # Example: Same as above, but do not cleanup deployment area and reuse it from previous installtion - usefull for testing behaviour
     #          of different versions during development or mix running from source and from pypi installed packages.
     #          NOTE: The 'current' link must point to the proper deployment area e.g. either to 'srv/master' for running from source
     #                or to 'srv/2.0.3rc1' for running from pypi installed package):
-    # ./deploy-centralvenv.sh -c cmsweb-test1.cern.ch -n -i test -l wmcore==2.0.3rc1 -d /data/tmp/WMCore.venv3/ -m "Some security string"
+    # ./wmagent-venv-deploy.sh -n -i test -l wmcore==2.0.3rc1 -d /data/tmp/WMAgent.venv3/ -m "Some security string"
 
-    # Example: Deploy WMCore central services from source repository, use tag 2.0.0.pre3, linked with 'cmsweb-test1.cern.ch' as a frontend
-    #          at destination /data/tmp/WMCore.venv3/ and using 'Some security string' as a security string for operationss at runtime:
-    # ./deploy-centralvenv.sh -c cmsweb-test1.cern.ch -s -t 2.0.0.pre3 -d /data/tmp/WMCore.venv3/ -m "Some security string"
+    # Example: Deploy WMAgent from source repository, use tag 2.0.0.pre3,
+    #          at destination /data/tmp/WMAgent.venv3/ and using 'Some security string' as a security string for operationss at runtime:
+    # ./wmagent-venv-deploy.sh -s -t 2.0.0.pre3 -d /data/tmp/WMAgent.venv3/ -m "Some security string"
 
     # Example: Same as above, but assume 'Yes' to all questions. To be used in order to chose the default flow and rely only
     #          on the pameters set for configuring the deployment steps. This will avoid human intervention during deployment:
-    # ./deploy-centralvenv.sh -c cmsweb-test1.cern.ch -y -s -t 2.0.0.pre3 -d /data/tmp/WMCore.venv3/ -m "Some security string"
+    # ./wmagent-venv-deploy.sh -y -s -t 2.0.0.pre3 -d /data/tmp/WMAgent.venv3/ -m "Some security string"
 
-    # Example: Deploy WMCore central services from source repository, use tag 2.0.0.pre3, linked with a frontend defined from service_config files
-    #          at destination /data/tmp/WMCore.venv3/ and using 'Some security string' as a security string for operationss at runtime:
-    # ./deploy-centralvenv.sh -s -t 2.0.0.pre3 -d /data/tmp/WMCore.venv3/ -m "Some security string"
+    # Example: Deploy WMAgent from source repository, use tag 2.0.0.pre3, linked with a frontend defined from service_config files
+    #          at destination /data/tmp/WMAgent.venv3/ and using 'Some security string' as a security string for operationss at runtime:
+    # ./wmagent-venv-deploy.sh -s -t 2.0.0.pre3 -d /data/tmp/WMAgent.venv3/ -m "Some security string"
 
     # DEPENDENCIES: All WMCore packages have OS or external libraries/packages dependencies, which are not having a pypi equivalent.
     #               So far those has been resolved through the set of *.spec files maintained at: https://github.com/cms-sw/cmsdist/tree/comp_gcc630
     #               Here follows the list of all direct (first level) dependencies per service generated from those spec files:
 
-    #               acdcserver           : [python3, rotatelogs, couchdb]
-    #               reqmgr2              : [python3, rotatelogs, couchdb]
-    #               reqmgr2ms-transferor : [python3, rotatelogs]
-    #               reqmgr2ms-monitor    : [python3, rotatelogs]
-    #               reqmgr2ms-output     : [python3, rotatelogs]
-    #               reqmgr2ms-unmerged   : [python3, rotatelogs]
-    #               reqmgr2ms-rulecleaner: [python3, rotatelogs]
-    #               reqmgr2ms-pileup     : [python3, rotatelogs]
-    #               reqmon               : [python3, rotatelogs]
-    #               t0_reqmon            : [python3, rotatelogs]
-    #               workqueue            : [python3, rotatelogs, couchdb, yui]
+    #               wmagent           : [python3, MariaDB, CouchDB]
 
     #               The above list is generated from the 'cmsdist' repository by:
     #               git clone https://github.com/cms-sw/cmsdist/tree/comp_gcc630
@@ -136,8 +126,6 @@ wmCfgBranch="test"                                                        # WMCo
 wmTag=""                                                                  # wmcore tag Default: no tag
 serPatch=""                                                               # a list of service patches to be applied
 runFromSource=false                                                       # a bool flag indicating run from source
-vmName=""                                                                 # hostname for central services
-vmName=${vmName%%.*}
 pipIndex="prod"                                                           # pypi Index to use
 verboseMode=false
 assumeYes=false
@@ -155,21 +143,17 @@ secString=""                                                              # The 
 
 pythonCmd=python
 [[ $(python -V 2>&1) =~ Python[[:blank:]]+2.* ]] && pythonCmd=python3
-# pythonCmd="/afs/cern.ch/user/t/tivanov/WMCoreDev.d/Python-3.8.16/python"
 
 
 ### Searching for the mandatory and optional arguments:
 # export OPTIND=1
-while getopts ":t:c:r:b:g:j:d:p:m:l:i:snvyh" opt; do
+while getopts ":t:r:b:g:j:d:p:m:l:i:snvyh" opt; do
     case ${opt} in
         d)
             venvPath=$OPTARG
             venvPath=$(_realPath $venvPath) ;;
         t)
             wmTag=$OPTARG ;;
-        c)
-            vmName=$OPTARG
-            vmName=${vmName%%.*} ;;
         r)
             wmSrcRepo=$OPTARG ;;
         b)
@@ -344,7 +328,6 @@ startSetupVenv(){
     echo "Cleanup Virtual Env  : $venvCleanup"
     echo "verboseMode          : $verboseMode"
     echo "assumeYes            : $assumeYes"
-    echo "central services host: $vmName"
     echo "secSring             : $secString"
     echo "pythonCmd            : $pythonCmd and `which $pythonCmd`"
     echo "======================================================="
@@ -494,41 +477,6 @@ _pkgInstall(){
         done ;}
 }
 
-pkgInstall(){
-    # Function for installing the service package list inside the virtual, isolating
-    # every package related to WMCore inside the $wmCurrPath. Once completed with the
-    # deployment, renames the target directory to the proper WMcore version installed
-    # and recreates the `current' soft link pointing to point to the new destiation
-    # It uses the script's runtime prameters from global scope.
-    # :param: None
-    echo
-    echo "======================================================="
-    echo "Install all requested services inside the virtual env:"
-    echo -n "Continue? [y]: "
-    $assumeYes || read x && [[ $x =~ (n|no|nO|N|No|NO) ]] && return 101
-    echo "..."
-    _pkgInstall $serviceList || return $?
-
-    # if we have deployed from pip then the $wmDepPath ends with `latest'
-    # so we need to change it with the actual package version deployed
-    if [[ ${wmDepPath##*/} == "latest" ]]; then
-        local pkgVersion=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
-        local newDepPath=${wmDepPath%latest}$pkgVersion
-        echo "pkgVersion: $pkgVersion"
-        echo "wmDepPath: $wmDepPath"
-        echo "newDepPath: $newDepPath"
-        [[ -z $pkgVersion ]] && { echo "Could not determine the WMCore package version. Leaving it as latest"; return 0;}
-
-        # NOTE: The following steps are  dangerous, because they include some `rm -rf' commands
-        #       we need to take precautions we are not touching anything beyond the scope of the virtual environment!
-        [[ $newDepPath =~ ^$venvPath ]] || { echo "Halt because crossing virtual environment boundaries." ; return 1 ;}
-        [[ -d $newDepPath ]] && {  echo  "Removing leftovers from old deployments.";  rm -rvf $newDepPath ; }
-        mv -v $wmDepPath $newDepPath || return $?
-        [[ -h $wmCurrPath ]] && rm $wmCurrPath || return $?
-        ln -s $newDepPath $wmCurrPath || return $?
-    fi
-}
-
 setupDependencies(){
     # Function to install all WMCore python dependencies inside the virtual environment
     # based on the default WMCore/requirements.txt file. It will be found only if we
@@ -593,312 +541,6 @@ client_cert = \$X509_USER_CERT
 client_key = \$X509_USER_KEY
 client_x509_proxy = \$X509_USER_PROXY
 request_retries = 3
-EOF
-}
-
-setupDeplTree(){
-    # Function for setting up the default WMCore deployment tree.
-    # Also creates a temporary `current' soft link to the deployment and configuration
-    # path, which will be properly renamed and switched to point to the actual version
-    # deployed on a later stage.
-    # It also adds all WMCore related virtual environments to both: currently running
-    # virtual environment and the WMCore hooks to be added to bin/activate
-    # It uses the script's runtime prameters from global scope.
-    # :param: None
-    echo
-    echo "======================================================="
-    echo "Setup WMCore paths inside the virtual env:"
-    echo -n "Continue? [y]: "
-    $assumeYes || read x && [[ $x =~ (n|no|nO|N|No|NO) ]] && return 102
-    echo "..."
-    # NOTE: Setting the `current' symlink pointing to the actual wmcore version
-    #       deployed. We are no longer having the cmsweb deployment tag HG20***
-    #       Currently we have three possible cases:
-    #       * The pypi package version deployed - we must pay attention if we
-    #         have version misalignment of different services installed
-    #       * The WMCore tag deployed if we are running from source and having
-    #         a tag specified for this deployment.
-    #       * The WMCore branch deployed if we are running from source and having
-    #         a branch specified for this deployment.
-
-    # Find current pythonlib
-    # TODO: first double check if we are actually inside the virtual environment
-    local pythonLib=$(python -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-
-    # setting the basic paths from the deployment tree
-    venvPath=$(_realPath $venvPath)
-    wmTopPath=${venvPath}/srv               # WMCore TopLevel Path
-    wmSrcPath=${wmTopPath}/WMCore           # WMCore source code target path
-    wmAuthPath=${wmTopPath}/auth            # WMCore auth target path
-    wmEnabledPath=${wmTopPath}/enabled      # WMCore enabled services path
-    wmStatePath=${wmTopPath}/state          # WMCore services state path
-    wmLogsPath=${wmTopPath}/logs            # WMCore services logs path
-    [[ -d $wmAuthPath    ]] || mkdir -p $wmAuthPath     || return $?
-    [[ -d $wmEnabledPath ]] || mkdir -p $wmEnabledPath  || return $?
-    [[ -d $wmStatePath   ]] || mkdir -p $wmStatePath    || return $?
-    [[ -d $wmLogsPath    ]] || mkdir -p $wmLogsPath     || return $?
-
-    # Finding the version we are  about to deploy
-    wmDepPath=""                            # WMCore deployment target path
-    if $runFromSource; then
-        [[ -z $wmDepPath ]] && [[ -n $wmTag ]] && wmDepPath=$wmTag
-        [[ -z $wmDepPath ]] && [[ -n $wmSrcBranch ]] && wmDepPath=$wmSrcBranch
-    else
-        [[ -z $wmDepPath ]] && wmDepPath="latest"
-    fi
-
-    wmDepPath=${wmTopPath}/$wmDepPath
-    [[ -d $wmDepPath ]] || mkdir -p $wmDepPath || return $?
-
-    # creating the current symlink
-    wmCurrPath=${wmTopPath}/current
-    [[ -h $wmCurrPath ]] && rm $wmCurrPath
-    ln -s $wmDepPath $wmCurrPath
-
-    # adding $wmCurrPath as a --prefix option to pip command
-    pipOpt="$pipOpt --prefix=$wmCurrPath"
-
-    # add deployment path as the first path in PYTHONPATH (we cut the $venvPath part
-    # from $pythonLib and substitute it with the $wmCurrPath which uses the `current' symlink )
-    newPythonLib=${pythonLib#$venvPath}
-    newPythonLib=${wmCurrPath}/${newPythonLib#/}
-
-    _addWMCoreVenvVar PYTHONPATH ${newPythonLib}:${pythonLib}
-    _addWMCoreVenvVar PATH ${wmCurrPath}/bin/:$PATH
-
-    # setting the config and tmp paths to be inside `current'
-    wmCfgPath=${wmCurrPath}/config           # WMCore cofig target path
-    wmTmpPath=${wmCurrPath}/tmp              # WMCore tmp path
-
-    [[ -d $wmCfgPath ]] || mkdir -p $wmCfgPath || return $?
-    [[ -d $wmTmpPath ]] || mkdir -p $wmTmpPath || return $?
-
-    # Creating auth, logs and state paths per enabled service:
-    # NOTE: We do need to hold at least the ${service}Secrets.py files inside $wmCurrPath,
-    #       and export them in the PYTHONPATH so that the secrets file can be reachable
-    #       because those are deployment flavor dependent (e.g. prod, preprod, test)
-    [[ -d ${wmCurrPath}/auth/ ]] || mkdir -p ${wmCurrPath}/auth || return $?
-    for service in $enabledList
-    do
-        [[ -d ${wmCurrPath}/auth/${service} ]] || mkdir -p ${wmCurrPath}/auth/${service} || { err=$?; echo "could not create auth path for: $service";  return $err  ;}
-        _addWMCoreVenvVar PYTHONPATH ${wmCurrPath}/auth/${service}:$PYTHONPATH
-
-        [[ -d ${wmStatePath}/${service} ]] || mkdir -p ${wmStatePath}/${service} || { err=$?; echo "could not create state path for: $service";  return $err  ;}
-        [[ -d ${wmLogsPath}/${service} ]] || mkdir -p ${wmLogsPath}/${service} || { err=$?; echo "could not create logs path for: $service";  return $err  ;}
-    done
-
-    _addWMCoreVenvVar X509_USER_CERT ${wmAuthPath}/dmwm-service-cert.pem
-    _addWMCoreVenvVar X509_USER_KEY ${wmAuthPath}/dmwm-service-key.pem
-    _addWMCoreVenvVar WMCORE_SERVICE_CONFIG ${wmCfgPath}
-    _addWMCoreVenvVar WMCORE_SERVICE_ENABLED ${wmEnabledPath}
-    _addWMCoreVenvVar WMCORE_SERVICE_AUTH ${wmAuthPath}
-    _addWMCoreVenvVar WMCORE_SERVICE_STATE ${wmStatePath}
-    _addWMCoreVenvVar WMCORE_SERVICE_LOGS ${wmLogsPath}
-    _addWMCoreVenvVar WMCORE_SERVICE_TMP ${wmTmpPath}
-    _addWMCoreVenvVar WMCORE_SERVICE_ROOT ${wmTopPath}
-
-    # add $wmSrcPath in front of everything if we are running from source
-    if $runFromSource; then
-        _addWMCoreVenvVar PYTHONPATH ${wmSrcPath}/src/python/:$PYTHONPATH
-        _addWMCoreVenvVar PATH ${wmSrcPath}/bin/:$PATH
-        _addWMCoreVenvVar WMCORE_SERVICE_SRC ${wmSrcPath}
-    fi
-}
-
-setupInitScripts(){
-    # Function to build the WMcore init scripts, based on the current setup
-    # configuration and set of enabled services
-    # Two types of scripts are created:
-    #  * `manage' script per enabled service, supporting basic operation like:
-    #     start, stop, restart, status
-    #  * `wmcmanage' global script for iterating through all enabled services. Supports:
-    #     start[:service], stop[:service], restart[:service], status[:service], version[:service]
-    # It uses the script's runtime prameters from global scope.
-    #:param: None
-    echo
-    echo "======================================================="
-    echo "Setup WMCore init scripts inside the virtual env:"
-    echo -n "Continue? [y]: "
-    $assumeYes || read x && [[ $x =~ (n|no|nO|N|No|NO) ]] && return 101
-    echo "..."
-
-    # DONE: To create the init.sh scripts
-    # First creating all the service level `manage' scripts:
-    local wmVersion=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
-    for service in $enabledList
-    do
-        local manageScript=${wmCfgPath}/${service}/manage
-        [[ -d ${wmCfgPath}/${service} ]] && touch $manageScript && chmod 755 $manageScript || { err=$?; echo "could not setup startup scripts for $service";  return $err  ;}
-        cat<<EOF>$manageScript
-#!/bin/bash
-
-help(){
-echo -e \$1
-cat <<EOH
-Usage: manage ACTION [SECURITY-STRING]
-
-Available actions:
-  help              show this help
-  version           get current version of the service
-  status            show current service's status
-  sysboot           start server from crond if not running
-  restart           (re)start the service
-  start             (re)start the service
-  stop              stop the service
-EOH
-}
-
-usage(){
-echo -e \$1
-help
-exit 1
-}
-
-ME=$service
-WMVERSION=$wmVersion
-
-ROOT=\${WMCORE_SERVICE_ROOT}
-CFGDIR=\${WMCORE_SERVICE_CONFIG}/\$ME
-LOGDIR=\${WMCORE_SERVICE_LOGS}/\$ME
-STATEDIR=\${WMCORE_SERVICE_STATE}/\$ME
-
-# NOTE: we need a better naming conventin for config-* files
-# first expand all config files found into a simple indexed array:
-CFGFILE=(\$CFGDIR/config*.py)
-
-# check if we have array length grater than 1 - we have more than a single config in the same directory:
-[[ \${#CFGFILE[*]} -gt 1 ]] && { echo "Found more than a single configuration file for the current service: \${CFGFILE[*]}" ; exit 1 ;}
-
-# check if the file is actually readable:
-[[ -r \$CFGFILE ]] || { echo "Could not find the service configuration file for: \$ME at: \$CFGFILE "; exit 1 ;}
-
-# find auxiliary jemalloc.sh script for running the service with memeory usage optimizations.
-jemalloc=\$(command -v jemalloc.sh)
-
-LOG=$service
-AUTHDIR=\$ROOT/current/auth/\$ME
-COLOR_OK="\\033[0;32m"
-COLOR_WARN="\\033[0;31m"
-COLOR_NORMAL="\\033[0;39m"
-
-# export PYTHONPATH=\$ROOT/auth/\$ME:\$PYTHONPATH
-# export REQMGR_CACHE_DIR=\$STATEDIR
-# export WMCORE_CACHE_DIR=\$STATEDIR
-
-# Start service conditionally on crond restart.
-sysboot()
-{
-  if [ -f \$CFGFILE ]; then
-    \$jemalloc wmc-httpd -v -d \$STATEDIR -l "|rotatelogs \$LOGDIR/\$LOG-%Y%m%d-`hostname -s`.log 86400" \$CFGFILE
-  fi
-}
-
-# Start the service.
-start()
-{
-  echo "starting \$ME"
-  if [ -f \$CFGFILE ]; then
-    \$jemalloc wmc-httpd -r -d \$STATEDIR -l "|rotatelogs \$LOGDIR/\$LOG-%Y%m%d-`hostname -s`.log 86400" \$CFGFILE
-  fi
-}
-
-
-# Stop the service.
-stop()
-{
-  echo "stopping \$ME"
-  if [ -f \$CFGFILE ]; then
-    wmc-httpd -k -d \$STATEDIR \$CFGFILE
-  fi
-}
-
-# Check if the server is running.
-status()
-{
-  if [ -f \$CFGFILE ]; then
-    wmc-httpd -s -d \$STATEDIR \$CFGFILE
-  fi
-}
-
-# Verify the security string.
-check()
-{
-  CHECK=\$(echo "\$1" | md5sum | awk '{print \$1}')
-  if [ \$CHECK != $secString ]; then
-    echo "\$0: cannot complete operation, please check documentation." 1>&2
-    exit 2;
-  fi
-}
-
-# Main routine, perform action requested on command line.
-case \${1:-status} in
-  sysboot ) sysboot ;;
-  start | restart ) check "\$2"; stop; start ;;
-  status )   status ;;
-  stop ) check "\$2";  stop ;;
-  help ) help ;;
-  version ) echo "\$WMVERSION" ;;
-  * )  echo "\$0: unknown action '\$1', please try '\$0 help' or documentation." 1>&2; exit 1 ;;
-esac
-
-EOF
-    done
-
-    # Creating the top level `wmcmanage' script:
-    # NOTE: We need to put it directly into the virtual environment bin/
-    local wmcManageScript=${VIRTUAL_ENV}/bin/wmcmanage
-    touch $wmcManageScript && chmod 755 $wmcManageScript || { err=$?; echo "could not setup the top level wmcmanage script.";  return $err  ;}
-    cat <<EOF>$wmcManageScript
-#!/bin/bash
-
-### The high level manage script for all WMCore enabled services.
-### It applies the chosen action on either the full set of enabled services for the
-### current virtual environment or to a single services pointed at the commandline
-
-help(){
-echo -e \$1
-cat <<EOH
-Usage: wmcmanage -h
-Usage: wmcmanage status[:what]
-Usage: wmcmanage start[:what] <security_string>
-Usage: wmcmanage stop[:what] <security_string>
-Usage: wmcmanage restart[:what] <security_string>
-Usage: wmcmanage version[:what]
-EOH
-}
-
-usage(){
-echo -e \$1
-help
-exit 1
-}
-
-[[ \$# -eq 0 ]] && usage
-STAGE="\$1"
-SEC_STRING=\$2
-[[ X"\$STAGE" == X ]] && usage
-
-case \$STAGE in
-    status:* | start:* | stop:* | restart:* | version:* )
-        WHAT=\${STAGE#*:} STAGE=\${STAGE%:*} ;;
-    status | start | stop | restart | version )
-        WHAT="*" ;;
-esac
-
-case \$STAGE in
-    status | start | stop | restart | version )
-        for service in \${WMCORE_SERVICE_ENABLED}/\$WHAT; do
-            [[ -f "\$service" ]] || continue
-            service=\${service##*/}
-            \${WMCORE_SERVICE_ROOT}/current/config/\$service/manage \$STAGE \$SEC_STRING
-        done
-        ;;
-    * )
-        echo "\$STAGE: bad stage, try -h for help" 1>&2
-        exit 1
-        ;;
-esac
-exit 0
 EOF
 }
 
@@ -1001,7 +643,7 @@ checkNeeded(){
     # NOTE: First of all, check for minimal bash version required.
     #       Associative arrays are not supported for bash versions earlier than 4.*
     #       This causes issues on OS X systems with the following error:
-    #       ./deploy-centralvenv.sh: line 280: declare: -A: invalid option
+    #       ./wmagent-venv-deploy.sh: line 280: declare: -A: invalid option
     #       declare: usage: declare [-afFirtx] [-p] [name[=value] ...]
     verString=$(bash --version)
     [[ $verString =~ ^GNU[[:blank:]]+bash,[[:blank:]]+version[[:blank:]]+[4-9]+\..* ]] || {
@@ -1219,13 +861,11 @@ main(){
     # setupDeplTree    || handleReturn $?
     if $runFromSource; then
         cloneWMCore  || handleReturn $?
+        setupDependencies|| handleReturn $?
     fi
     wmaInstall       || handleReturn $?
     tweakVenv        || handleReturn $?
-    # setupDependencies|| handleReturn $?
     # setupRucio       || handleReturn $?
-    # setupConfig      || handleReturn $?
-    # setupInitScripts || handleReturn $?
     setupIpython     || handleReturn $?
     setupVenvHooks   || handleReturn $?
     printVenvSetup
