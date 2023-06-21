@@ -368,6 +368,8 @@ cloneWMCore(){
     $assumeYes || read x && [[ $x =~ (n|no|nO|N|No|NO) ]] && return 101
     echo "..."
 
+    wmSrcPath=${venvPath}/srv/WMCore           # WMCore source code target path
+
     # NOTE: If the Virtual Environment is not to be cleaned during the current
     #       deployment and we already have either a source directory synced from
     #       previous deployments or a link at $wmSrcPath pointing to a source
