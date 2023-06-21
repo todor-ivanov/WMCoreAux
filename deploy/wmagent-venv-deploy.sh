@@ -1111,10 +1111,10 @@ wmaInstall() {
     cd $venvPath/CMSKubernetes/docker/pypi/wmagent
 
     export WMA_TAG=$wmTag
-    export WMA_USER=cmst1
-    export WMA_GROUP=zh
-    export WMA_UID=31961
-    export WMA_GID=1399
+    export WMA_USER=$(id -un)
+    export WMA_GROUP=$(id -gn)
+    export WMA_UID=$(id -u)
+    export WMA_GID=$(id -g)
     export WMA_ROOT_DIR=$venvPath
 
     # Basic WMAgent directory structure passed to all scripts through env variables:
@@ -1189,6 +1189,27 @@ wmaInstall() {
 
 }
 
+tweakVenv (){
+    # A function to tweak some Virtual Environment specific things, which are
+    # in general hard coded in the Docker image
+    echo "-------------------------------------------------------"
+    echo "Edit $WMA_DEPLOY_DIR/deploy/env.sh script to point to \$WMA_ROOT_DIR"
+    sed -i "s|/data/|\$WMA_ROOT_DIR/|g" $WMA_DEPLOY_DIR/deploy/env.sh
+    echo "Edit $WMA_DEPLOY_DIR/deploy/renew_proxy.sh script to point to \$WMA_ROOT_DIR"
+    sed -i "s|/data/|\$WMA_ROOT_DIR/|g" $WMA_DEPLOY_DIR/deploy/renew_proxy.sh
+    sed -i "s|source.*env\.sh|source \$WMA_ENV_FILE|g" $WMA_DEPLOY_DIR/deploy/renew_proxy.sh
+    cat $WMA_DEPLOY_DIR/deploy/env.sh
+    echo "-------------------------------------------------------"
+
+    echo "Copy certificates and WMAgent.secrets file from an old current agent"
+    cp -v /data/certs/servicekey.pem  $WMA_CERTS_DIR/
+    cp -v /data/admin/wmagent/WMAgent.secrets $WMA_ROOT_DIR/admin/wmagent/hostadmin/
+    cp -v /data/certs/servicecert.pem  $WMA_CERTS_DIR/
+    echo "-------------------------------------------------------"
+
+    echo "Eliminate mount points checks"
+    sed -Ei "s/^_check_mounts.*().*\{.*$/_check_mounts() \{ return \$(true)/g" $WMA_ROOT_DIR/run.sh
+}
 
 main(){
     checkNeeded      || handleReturn $?
@@ -1200,6 +1221,7 @@ main(){
         cloneWMCore  || handleReturn $?
     fi
     wmaInstall       || handleReturn $?
+    tweakVenv        || handleReturn $?
     # setupDependencies|| handleReturn $?
     # setupRucio       || handleReturn $?
     # setupConfig      || handleReturn $?
