@@ -386,38 +386,6 @@ cloneWMCore(){
     fi
 }
 
-setupConfig(){
-    # Function for cloning WMCore service_config files from gitlab and checkout
-    # to the proper config branch based on the script's runtime parameters.
-    # :param: None
-    echo
-    echo "======================================================="
-    echo "Cloning WMCore configuration files:"
-    echo -n "Continue? [y]: "
-    $assumeYes || read x && [[ $x =~ (n|no|nO|N|No|NO) ]] && return 101
-    echo "..."
-
-    [[ -d $wmCfgPath ]] ||  mkdir -p $wmCfgPath || return $?
-    cd $wmCfgPath
-    git clone $wmCfgRepo $wmCfgPath
-    # git checkout $wmCfgBranch && git pull origin $wmCfgBranch || return $?
-
-    # First checkout to a fresh empty branch so we never mix with the origin branches:
-    git checkout -b currentConfig
-
-    for service in $enabledList
-    do
-        # Add enabled links:
-        echo "Touching: ${wmEnabledPath}/${service}"
-        touch ${wmEnabledPath}/${service} || { err=$? ; echo "Could not create enabled link for: $service"; return $err ;}
-
-        # Checkout needed service configs from the specified configuration branch:
-        echo "Cloning configuration for: $service"
-        git checkout origin/$wmCfgBranch -- $service || { err=$? ; echo "Could not checkout configuration for: $service from: origin/$wmCfgBranch"; return $err ;}
-    done
-    cd -
-}
-
 _pipUpgradeVenv(){
     # Helper function used only for pip Upgrade for the current virtual env
     # :param: None
@@ -532,7 +500,7 @@ setupRucio(){
     # _addWMCoreVenvVar "RUCIO_HOME" "$venvPath/"
     _addWMCoreVenvVar RUCIO_HOME $wmCurrPath
 
-    cat << EOF > $RUCIO_HOME/etc/rucio.cfg
+    cat <<EOF > $RUCIO_HOME/etc/rucio.cfg
 [common]
 [client]
 rucio_host = http://cmsrucio-int.cern.ch
@@ -833,7 +801,7 @@ wmaInstall() {
 
 }
 
-tweakVenv (){
+tweakVenv(){
     # A function to tweak some Virtual Environment specific things, which are
     # in general hard coded in the Docker image
     echo "-------------------------------------------------------"
