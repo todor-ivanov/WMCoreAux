@@ -5,9 +5,9 @@ usage()
     echo -ne "\nA simple script to facilitate component patching\n"
     echo -ne "and to decrease the development && testing turnaround time.\n"
     echo -ne "Usage: \n"
-    echo -ne "\t sudo ./patchComponent.sh (wmagent | reqmon | reqmgr2 | reqmgr2ms...) 11270\n"
-    echo -ne "\t git diff --no-color | sudo ./patchComponent.sh (wmagent | reqmon | reqmgr2 | reqmgr2ms...)\n or:\n"
-    echo -ne "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh (wmagent | reqmon | reqmgr2 | reqmgr2ms...)\n"
+    echo -ne "\t sudo ./patchComponent.sh 11270\n"
+    echo -ne "\t git diff --no-color | sudo ./patchComponent.sh \n or:\n"
+    echo -ne "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
     exit 1
 }
 
@@ -16,29 +16,20 @@ usage()
 if [ -t 0 ] ; then pipe=false; else pipe=true ; fi
 
 # TODO: To check against a list of components
-component=$1
-shift
+# component=$1
+# shift
 patchNum=$1
 shift
 
-[[ -z $component ]] && usage
 [[ -z $patchNum ]] && patchNum=temp
 
 echo "Patching component: $component"
 
-if [[ $component == "wmagent" ]]
-then
-    rootDir=/data/srv/$component/current/apps.sw/$component/lib/python*/site-packages
-    rootBase=/data/srv/$component/current
-else
-    rootDir=/data/srv/current/apps.sw/$component/lib/python*/site-packages/
-    rootBase=/data/srv/current
-fi
+rootDir=/usr/local/lib/python3.8/site-packages/
 
 stripLevel=3
 patchFile=/tmp/$patchNum.patch
-currTag=$(basename $(realpath $rootBase))
-currTag=${currTag##v}
+currTag=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
 
 patchCmd="patch -t --verbose -b --version-control=numbered -d $rootDir -p$stripLevel"
 
