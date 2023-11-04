@@ -68,26 +68,33 @@ def reset_logging():
                     handler.release()
                 logger.removeHandler(handler)
 
-def _lsTree(ctx, baseDirPfn, haltAtBottom=False):
+def _lsTree(ctx, baseDirPfn, haltAtBottom=False, halt=False):
     """
     Rrecursively traverse the tree under baseDirPfn and return the resulted list of directories and files
-    return: List of all directories and files found.
+    param ctx:          Gfal Context manager object
+    param baseDirPfn:   The Pfn of the baseDir starting point
+    param haltAtBottom: Flag, if True stop recursion at the moment the first the first fileEntry is found
+    param halt:         Flag to signal immediate recursion halt
+    return:             Tuple: (List of all directories and files found && The halt flag from the current run)
     """
     dirList = []
+    if halt:
+        return dirList, halt
+
     # First test if baseDirPfn is actually a directory entry:
     try:
         entryStat = ctx.stat(baseDirPfn)
         if not stat.S_ISDIR(entryStat.st_mode):
             dirList.append(baseDirPfn)
             logger.info("_lsTree called with a fileEntry: %s" % baseDirPfn)
-            return dirList
+            return dirList, halt
     except gfal2.GError as gfalExc:
         if gfalExc.code == errno.ENOENT:
             logger.warning("MISSING baseDir: %s", baseDirPfn)
-            return dirList
+            return dirList, halt
         else:
             logger.error("FAILED to open baseDir: %s: gfalException: %s", baseDirPfn, str(gfalExc))
-            return dirList
+            return dirList, halt
 
     if baseDirPfn[-1] != '/':
         baseDirPfn += '/'
@@ -100,6 +107,8 @@ def _lsTree(ctx, baseDirPfn, haltAtBottom=False):
         raise gfalExc
 
     for dirEntry in dirEntryList:
+        if halt:
+            break
         if dirEntry in ['.', '..']:
             continue
         dirEntryPfn = baseDirPfn + dirEntry
@@ -114,15 +123,27 @@ def _lsTree(ctx, baseDirPfn, haltAtBottom=False):
                 logger.error("FAILED to open dirEntry: %s: gfalException: %s", dirEntryPfn, str(gfalExc))
                 continue
 
-        if stat.S_ISDIR(entryStat.st_mode):
+        if not stat.S_ISDIR(entryStat.st_mode):
             dirList.append(dirEntryPfn)
-            dirList.extend(_lsTree(ctx, dirEntryPfn))
+            logger.info("Found file: %s" % dirEntry)
+            if haltAtBottom:
+                halt=True
+                return dirList, halt
         else:
             dirList.append(dirEntryPfn)
-            logger.info("Found a file: %s" % dirEntry)
-            if haltAtBottom:
-                return dirList
-    return dirList
+            dirListExtension, halt = _lsTree(ctx, dirEntryPfn, haltAtBottom=haltAtBottom, halt=halt)
+            dirList.extend(dirListExtension)
+
+    return dirList, halt
+
+
+def lsTree(ctx, baseDirPfn, haltAtBottom=False):
+    """
+    A _lsTree wrapper
+    return: Just a list with the directory contents
+    """
+    dirContent, _ = _lsTree(ctx, baseDirPfn, haltAtBottom=haltAtBottom)
+    return dirContent
 
 
 def measureTime(ctx, rse, baseDirLfn='/store/unmerged/'):
@@ -130,10 +151,10 @@ def measureTime(ctx, rse, baseDirLfn='/store/unmerged/'):
     endTime = {}
     for proto in rse['pfnPrefixes']:
         baseDirPfn = rse['pfnPrefixes'][proto] + baseDirLfn
-        print("Start _lsTree with protocol: %s" % proto)
+        print("Start lsTree with protocol: %s" % proto)
         print("Base dir pfn: %s" % baseDirPfn)
         startTime[proto] = time.time()
-        dirContent = _lsTree(ctx, baseDirPfn)
+        dirContent = lsTree(ctx, baseDirPfn)
         endTime[proto] = time.time()
         print("Elapsed Time Seconds = %s" % (endTime[proto] - startTime[proto]))
         print("")
@@ -157,7 +178,7 @@ def findPfnPrefix(rseName, proto):
         logger.error('Could not open Storage Config File for site: %s' % rseName)
     return pfnPrefix
 
-def findUnprotectdLfn(ctx, rse):
+def findUnprotectdLfn(ctx, msUnmerged, rse):
     """
     A simple function to find a random unprotected file suitable for deletion
     """
@@ -170,18 +191,39 @@ def findUnprotectdLfn(ctx, rse):
     logger.info("Using PfnPrefix: %s" % pfnPrefix)
 
     if not msUnmerged.protectedLFNs:
-        logger.error( "Could not fetch the protectedLFNs list from Production WMStatServer. ")
+        logger.error( "The current MSUnmerged instance has an EMPTY protectedLFNs list. Please update it from the Production WMStatServer. ")
         return None
-    unmergedCont = ctx.listdir(rse['pfnPrefixes']['WebDAV'] + '/store/unmerged/')
+
+    try:
+        # dirEntryPfn = rse['pfnPrefixes']['WebDAV'] + '/store/unmerged/'
+        dirEntryPfn = pfnPrefix + '/store/unmerged/'
+        unmergedCont = ctx.listdir(dirEntryPfn)
+    except gfal2.GError as gfalExc:
+        logger.error("FAILED to open dirEntry: %s: gfalException: %s", dirEntryPfn, str(gfalExc))
+        return unprotectedLfn
+
     if not unmergedCont:
         logger.error("Empty unmerged content")
         return None
 
     while not unprotectedLfn:
         dirEntry = random.choice(unmergedCont)
+        skipDirEntry = False
+        for dirFilter in msConfig['dirFilterExcl']:
+            if dirFilter.startswith('/store/unmerged/' + dirEntry):
+                skipDirEntry = True
+                break
+        if skipDirEntry:
+            continue
+
         logger.info("Searching for an unprotected Lfn at: %s in: /store/unmerged/%s " % (rse['name'], dirEntry))
         dirEntryPfn = pfnPrefix + '/store/unmerged/' + dirEntry
-        dirTreePfn = _lsTree(ctx, dirEntryPfn, haltAtBottom=True)
+        try:
+            dirTreePfn = lsTree(ctx, dirEntryPfn, haltAtBottom=True)
+        except gfal2.GError as gfalExc:
+            logger.error("FAILED to recursively traverse through dirEntry: %s: gfalException: %s", dirEntryPfn, str(gfalExc))
+            break
+
         filePfn = None
         for dirEntry in dirTreePfn:
             if dirEntry.endswith(".root"):
@@ -297,6 +339,13 @@ if __name__ == '__main__':
         for proto in protoList:
             rse['pfnPrefixes'][proto] = findPfnPrefix(rse['name'], proto)
         rseList[rse['name']] = rse
+
+
+    # for rseName in rseList:
+    #     logger.info("Searching for an unprotected Lfn at: %s" % rseName)
+    #     unprotectedLfn = findUnprotectdLfn(ctx, msUnmerged, rseList[rseName])
+    #     unprotectedBaseLfn = msUnmerged._cutPath(unprotectedLfn)
+    #     rseList[rseName]['files']['toDelete'][unprotectedBaseLfn] = [unprotectedLfn]
 
 
     # msUnmerged.execute()
