@@ -7,6 +7,7 @@ import stat
 import errno
 import json
 import random
+import re
 
 from pprint import pformat, pprint
 # from itertools import izip
@@ -83,6 +84,7 @@ def _lsTree(ctx, baseDirPfn, haltAtBottom=False, halt=False):
 
     # First test if baseDirPfn is actually a directory entry:
     try:
+        logger.info("Stat baseDirPfn: %s" % baseDirPfn)
         entryStat = ctx.stat(baseDirPfn)
         if not stat.S_ISDIR(entryStat.st_mode):
             dirList.append(baseDirPfn)
@@ -101,6 +103,7 @@ def _lsTree(ctx, baseDirPfn, haltAtBottom=False, halt=False):
 
     # Second recursively iterate down the tree:
     try:
+        logger.info("Listing baseDirPfn: %s" % baseDirPfn)
         dirEntryList = ctx.listdir(baseDirPfn)
     except gfal2.GError as gfalExc:
         logger.error("gfal Exception raised while listing %s. GError: %s" % (baseDirPfn, str(gfalExc)))
@@ -114,6 +117,7 @@ def _lsTree(ctx, baseDirPfn, haltAtBottom=False, halt=False):
         dirEntryPfn = baseDirPfn + dirEntry
         # logger.info(dirEntryPfn)
         try:
+            logger.info("Stat dirEntryPfn: %s" % dirEntryPfn)
             entryStat = ctx.stat(dirEntryPfn)
         except gfal2.GError as gfalExc:
             if gfalExc.code == errno.ENOENT:
@@ -197,6 +201,7 @@ def findUnprotectdLfn(ctx, msUnmerged, rse):
     try:
         # dirEntryPfn = rse['pfnPrefixes']['WebDAV'] + '/store/unmerged/'
         dirEntryPfn = pfnPrefix + '/store/unmerged/'
+        logger.info("Stat /store/unmerged/ area at: %s" % dirEntryPfn)
         unmergedCont = ctx.listdir(dirEntryPfn)
     except gfal2.GError as gfalExc:
         logger.error("FAILED to open dirEntry: %s: gfalException: %s", dirEntryPfn, str(gfalExc))
@@ -206,6 +211,38 @@ def findUnprotectdLfn(ctx, msUnmerged, rse):
         logger.error("Empty unmerged content")
         return None
 
+
+    # First try to seek for a file through RucioConMon:
+    logger.info("First: Trying to find a random Lfn from RucioConMon:")
+    rseAllUnmerged = []
+    try:
+        rseAllUnmerged = msUnmerged.rucioConMon.getRSEUnmerged(rse['name']) # Intentionally not saving this in the RSE object
+    except exception as ex:
+        logger.error("Failed to fetch Unmerged files lists from RucioConMon for site: %s" % rse['name'])
+
+    if rseAllUnmerged:
+        for fileLfn in rseAllUnmerged:
+            # Check if what we start with is under /store/unmerged/* and is currently under one of the branches present at the site
+            if msUnmerged.regStoreUnmergedLfn.match(fileLfn):
+                # Cut the path to the deepest level known to WMStats protected LFNs
+                fileBaseLfn = msUnmerged._cutPath(fileLfn)
+                if not fileBaseLfn in msUnmerged.protectedLFNs:
+                    filePfn = pfnPrefix + fileLfn
+                    try:
+                        logger.info("Stat fileEtryPfn: %s" % filePfn)
+                        entryStat = ctx.stat(filePfn)
+                    except gfal2.GError as gfalExc:
+                        if gfalExc.code == errno.ENOENT:
+                            logger.warning("MISSING fileEntry: %s", filePfn)
+                            continue
+                        else:
+                            logger.error("FAILED to open fileEntry: %s: gfalException: %s", dirEntryPfn, str(gfalExc))
+                            continue
+                    logger.info("Found an unprotected fileLfn %s with fileBaseLfn: %s"  % (fileLfn, fileBaseLfn))
+                    unprotectedLfn = fileLfn
+                    return unprotectedLfn
+
+    logger.info("Second: Start recursive search for an unprotected Lfn at: %s " % rse['name'])
     while not unprotectedLfn:
         dirEntry = random.choice(unmergedCont)
         skipDirEntry = False
@@ -216,7 +253,7 @@ def findUnprotectdLfn(ctx, msUnmerged, rse):
         if skipDirEntry:
             continue
 
-        logger.info("Searching for an unprotected Lfn at: %s in: /store/unmerged/%s " % (rse['name'], dirEntry))
+        logger.info("Start recursive search for an unprotected Lfn at: %s in: /store/unmerged/%s " % (rse['name'], dirEntry))
         dirEntryPfn = pfnPrefix + '/store/unmerged/' + dirEntry
         try:
             dirTreePfn = lsTree(ctx, dirEntryPfn, haltAtBottom=True)
@@ -239,6 +276,7 @@ def findUnprotectdLfn(ctx, msUnmerged, rse):
         if not fileBaseLfn in msUnmerged.protectedLFNs:
             logger.info("Found an unprotected fileLfn %s with fileBaseLfn: %s"  % (fileLfn, fileBaseLfn))
             unprotectedLfn = fileLfn
+
     return unprotectedLfn
 
 
