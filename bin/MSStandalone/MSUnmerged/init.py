@@ -8,6 +8,9 @@ import errno
 import json
 import random
 import re
+import queue
+import threading
+
 
 from pprint import pformat, pprint
 # from itertools import izip
@@ -148,6 +151,7 @@ def lsTree(ctx, baseDirPfn, haltAtBottom=False):
     """
     dirContent, _ = _lsTree(ctx, baseDirPfn, haltAtBottom=haltAtBottom)
     return dirContent
+
 
 
 def measureTime(ctx, rse, baseDirLfn='/store/unmerged/'):
@@ -378,13 +382,11 @@ if __name__ == '__main__':
             rse['pfnPrefixes'][proto] = findPfnPrefix(rse['name'], proto)
         rseList[rse['name']] = rse
 
-
     # for rseName in rseList:
     #     logger.info("Searching for an unprotected Lfn at: %s" % rseName)
     #     unprotectedLfn = findUnprotectdLfn(ctx, msUnmerged, rseList[rseName])
     #     unprotectedBaseLfn = msUnmerged._cutPath(unprotectedLfn)
     #     rseList[rseName]['files']['toDelete'][unprotectedBaseLfn] = [unprotectedLfn]
-
 
     # msUnmerged.execute()
     # msUnmerged.protectedLFNs
@@ -393,3 +395,53 @@ if __name__ == '__main__':
     # rse['pfnPrefixDavs'] = rse['pfnPrefix']
     # lfn = '/store/unmerged/GenericNoSmearGEN/InclusiveDileptonMinBias_TuneCP5Plus_13p6TeV_pythia8/GEN/124X_mcRun3_2022_realistic_v12-v2'
     # dirCont = _lsTree(ctx, rse['pfnPrefixDavs'] + lfn)
+
+    rse = rseList['T2_IT_Legnaro']
+    rse = msUnmerged.getUnmergedFiles(rse)
+    rse = msUnmerged.filterUnmergedFiles(rse)
+
+    qList = {}
+    for qNum in range(1,11):
+        qList[qNum] = queue.Queue()
+
+    def worker(q, ctx, rse):
+        while True:
+            fileGen = q.get()
+            threadName = threading.current_thread().name
+            logger.info(f'{threadName}: Start    Working on: {fileGen}')
+            for lfn in rse['files']['toDelete'][fileGen]:
+                pfn = rse['pfnPrefixes']['WebDAV'] + lfn
+                # lsTree(ctx, pfn)
+                try:
+                    logger.info(f"{threadName}: Stat file: {lfn}")
+                    fileEntry = ctx.stat(pfn)
+                except gfal2.GError as gfalExc:
+                    logger.error("gfal Exception raised while opening %s. GError: %s" % (pfn, str(gfalExc)))
+                    # raise gfalExc
+                except Exception as ex:
+                    logger.error("A Non gfal Exception raised while opening %s. Error: %s" % (pfn, str(ex)))
+                    # raise ex
+            logger.info(f'{threadName}: Finished Working on: {fileGen}')
+            q.task_done()
+
+    ctxList = {}
+    for qNum in qList:
+        ctxList[qNum] = createGfal2Context(msConfig['gfalLogLevel'], msConfig['emulateGfal2'])
+
+    threadList = {}
+    for qNum in qList:
+        threadName = "Thread" + str(qNum)
+        threadList[qNum] = threading.Thread(name=threadName, target=worker, args=[qList[qNum], ctxList[qNum], rse], daemon=True)
+        threadList[qNum].start()
+
+    for group in grouper(rse['files']['toDelete'], len(qList)):
+        for qfill in zip(group, qList):
+            fileGen = qfill[0]
+            qNum = qfill[1]
+            # print(f'qNum: {qNum} - qFileGen:{fileGen}')
+            # qList[qNum].put(rse['files']['toDelete'][fileGen])
+            qList[qNum].put(fileGen)
+        logger.info("==========================")
+
+    for qNum in qList:
+        qList[qNum].join()
