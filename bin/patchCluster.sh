@@ -19,7 +19,9 @@ echo -n "[y/n](Default n): "
 read x && [[ $x =~ (y|yes|Yes|YES) ]] || { echo WARNING: Exit on user request!; exit 101 ;}
 
 nameSapace=dmwm
-podCmd="wget https://raw.githubusercontent.com/dmwm/WMCore/master/bin/patchComponent.sh -O /data/patchComponent.sh && chmod 755 /data/patchComponent.sh && sudo /data/patchComponent.sh $patchNum && /data/run.sh &"
+podCmd="wget https://raw.githubusercontent.com/dmwm/WMCore/master/bin/patchComponent.sh -O /data/patchComponent.sh && chmod 755 /data/patchComponent.sh && sudo /data/patchComponent.sh $patchNum "
+restartCmd="/data/manage restart && sleep 1 && /data/manage status"
+
 runningPods=`kubectl get pods --no-headers -o custom-columns=":metadata.name" -n $nameSapace  --field-selector=status.phase=Running`
 
 for pod in $runningPods
@@ -29,4 +31,7 @@ do
     echo $pod:
     echo Executing: kubectl exec -it $pod -n $nameSapace -- /bin/bash -c \"$podCmd\"
     kubectl exec -it $pod -n $nameSapace -- /bin/bash -c "$podCmd"
+    echo
+    echo Executing: kubectl exec $pod -n $nameSapace -- /bin/bash -c \"$restartCmd\"
+    kubectl exec $pod -n $nameSapace -- /bin/bash -c "$restartCmd"
 done
