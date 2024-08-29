@@ -169,15 +169,20 @@ export PKG_CONFIG_PATH=~/DBSDev.d/go/pkg.pc.d
 # # export PATH=${PATH}:~/.local/bin
 
 epoch(){
-    local seconds=$1
-    [[ $seconds =~ ^[0-9]*$ ]] || { echo "Not valid Epoch Time"; return 1 ;}
-    echo -ne "Sofia: "; TZ="Europe/Sofia" date --date="@$seconds"
-    echo -ne "CERN:  "; TZ="Europe/Zurich" date --date="@$seconds"
-    echo -ne "GMT:   "; TZ="GMT" date --date="@$seconds"
-    echo -ne "UTC:   "; TZ="UTC" date --date="@$seconds"
-    echo -ne "ND:    "; TZ="America/Indiana/Indianapolis" date --date="@$seconds"
-    echo -ne "FNAL:  "; TZ="America/Chicago" date --date="@$seconds"
+    local dateVal=`date`
+    local dateVal=${1:-$dateVal}
+    if [[ $dateVal =~ ^[0-9]*$ ]]; then
+        echo -ne "Sofia: "; TZ="Europe/Sofia" date --date="@$dateVal"
+        echo -ne "CERN:  "; TZ="Europe/Zurich" date --date="@$dateVal"
+        echo -ne "GMT:   "; TZ="GMT" date --date="@$dateVal"
+        echo -ne "UTC:   "; TZ="UTC" date --date="@$dateVal"
+        echo -ne "ND:    "; TZ="America/Indiana/Indianapolis" date --date="@$dateVal"
+        echo -ne "FNAL:  "; TZ="America/Chicago" date --date="@$dateVal"
+    else
+        date --date="$dateVal" +%s
+    fi
 }
+
 
 
 export HISTSIZE=10000000
