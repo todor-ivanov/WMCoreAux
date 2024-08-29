@@ -594,9 +594,13 @@ setupRucio(){
     $assumeYes || read x && [[ $x =~ (n|no|nO|N|No|NO) ]] && return 101
     echo "..."
 
+    for var in ${!wm*}
+    do
+        echo $var: ${!var}
+    done
     _pkgInstall rucio-clients
-    # _addWMCoreVenvVar "RUCIO_HOME" "$venvPath/"
-    _addWMCoreVenvVar RUCIO_HOME $wmCurrPath
+    _addWMCoreVenvVar "RUCIO_HOME" "$venvPath/"
+    # _addWMCoreVenvVar RUCIO_HOME $wmDepPath
 
     cat << EOF > $RUCIO_HOME/etc/rucio.cfg
 [common]
@@ -680,6 +684,7 @@ setupDeplTree(){
     newPythonLib=${wmCurrPath}/${newPythonLib#/}
 
     _addWMCoreVenvVar PYTHONPATH ${newPythonLib}:${pythonLib}
+    _addWMCoreVenvVar PYTHONPATH $wmAuthPath
     _addWMCoreVenvVar PATH ${wmCurrPath}/bin/:$PATH
 
     # setting the config and tmp paths to be inside `current'
@@ -693,18 +698,17 @@ setupDeplTree(){
     # NOTE: We do need to hold at least the ${service}Secrets.py files inside $wmCurrPath,
     #       and export them in the PYTHONPATH so that the secrets file can be reachable
     #       because those are deployment flavor dependent (e.g. prod, preprod, test)
+    # NOTE: We are about to use a single auth path for all services:
     [[ -d ${wmCurrPath}/auth/ ]] || mkdir -p ${wmCurrPath}/auth || return $?
     for service in $enabledList
     do
-        [[ -d ${wmCurrPath}/auth/${service} ]] || mkdir -p ${wmCurrPath}/auth/${service} || { err=$?; echo "could not create auth path for: $service";  return $err  ;}
-        _addWMCoreVenvVar PYTHONPATH ${wmCurrPath}/auth/${service}:$PYTHONPATH
+        # [[ -d ${wmCurrPath}/auth/${service} ]] || mkdir -p ${wmCurrPath}/auth/${service} || { err=$?; echo "could not create auth path for: $service";  return $err  ;}
+        # _addWMCoreVenvVar PYTHONPATH ${wmCurrPath}/auth/${service}:$PYTHONPATH
 
         [[ -d ${wmStatePath}/${service} ]] || mkdir -p ${wmStatePath}/${service} || { err=$?; echo "could not create state path for: $service";  return $err  ;}
         [[ -d ${wmLogsPath}/${service} ]] || mkdir -p ${wmLogsPath}/${service} || { err=$?; echo "could not create logs path for: $service";  return $err  ;}
     done
 
-    _addWMCoreVenvVar X509_USER_CERT ${wmAuthPath}/dmwm-service-cert.pem
-    _addWMCoreVenvVar X509_USER_KEY ${wmAuthPath}/dmwm-service-key.pem
     _addWMCoreVenvVar WMCORE_SERVICE_CONFIG ${wmCfgPath}
     _addWMCoreVenvVar WMCORE_SERVICE_ENABLED ${wmEnabledPath}
     _addWMCoreVenvVar WMCORE_SERVICE_AUTH ${wmAuthPath}
@@ -712,6 +716,12 @@ setupDeplTree(){
     _addWMCoreVenvVar WMCORE_SERVICE_LOGS ${wmLogsPath}
     _addWMCoreVenvVar WMCORE_SERVICE_TMP ${wmTmpPath}
     _addWMCoreVenvVar WMCORE_SERVICE_ROOT ${wmTopPath}
+    _addWMCoreVenvVar X509_USER_CERT ${wmAuthPath}/dmwm-service-cert.pem
+    _addWMCoreVenvVar X509_USER_KEY ${wmAuthPath}/dmwm-service-key.pem
+
+    # linking the service certificate from the host to the current env.
+    [[ -h ${wmAuthPath}/dmwm-service-cert.pem ]] || ln -s /data/certs/servicecert.pem ${wmAuthPath}/dmwm-service-cert.pem
+    [[ -h ${wmAuthPath}/dmwm-service-key.pem ]]  || ln -s /data/certs/servicekey.pem ${wmAuthPath}/dmwm-service-key.pem
 
     # add $wmSrcPath in front of everything if we are running from source
     if $runFromSource; then
@@ -743,6 +753,11 @@ setupInitScripts(){
     local wmVersion=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
     for service in $enabledList
     do
+        # Edit service config to point to the current deployment central service:
+        local configFile="${wmCfgPath}/${service}/config*.py"
+        sed -i "s/CLUSTER_NAME.*=.*/CLUSTER_NAME = '$vmName'/g" $configFile
+
+        # create manage script
         local manageScript=${wmCfgPath}/${service}/manage
         [[ -d ${wmCfgPath}/${service} ]] && touch $manageScript && chmod 755 $manageScript || { err=$?; echo "could not setup startup scripts for $service";  return $err  ;}
         cat<<EOF>$manageScript
