@@ -172,6 +172,10 @@ epoch(){
     local dateVal=`date`
     local dateVal=${1:-$dateVal}
     if [[ $dateVal =~ ^[0-9]*$ ]]; then
+        day=`date --date="@$dateVal" +%d`
+        month=`date --date="@$dateVal" +%m`
+        year=`date --date="@$dateVal" +%Y`
+        cal $day $month $year
         echo -ne "Sofia: "; TZ="Europe/Sofia" date --date="@$dateVal"
         echo -ne "CERN:  "; TZ="Europe/Zurich" date --date="@$dateVal"
         echo -ne "GMT:   "; TZ="GMT" date --date="@$dateVal"
@@ -179,10 +183,15 @@ epoch(){
         echo -ne "ND:    "; TZ="America/Indiana/Indianapolis" date --date="@$dateVal"
         echo -ne "FNAL:  "; TZ="America/Chicago" date --date="@$dateVal"
     else
+        day=`date --date="$dateVal" +%d`
+        month=`date --date="$dateVal" +%m`
+        year=`date --date="$dateVal" +%Y`
+        cal $day $month $year
+        echo
+        echo -ne "Seconds since start of Epoch: "
         date --date="$dateVal" +%s
     fi
 }
-
 
 
 export HISTSIZE=10000000
