@@ -879,6 +879,7 @@ EOF
     # NOTE: We need to put it directly into the virtual environment bin/
     local wmcManageScript=${VIRTUAL_ENV}/bin/wmcmanage
     touch $wmcManageScript && chmod 755 $wmcManageScript || { err=$?; echo "could not setup the top level wmcmanage script.";  return $err  ;}
+    ln -s $wmcManageScript ${VIRTUAL_ENV}/bin/manage
     cat <<EOF>$wmcManageScript
 #!/bin/bash
 
