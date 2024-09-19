@@ -193,7 +193,7 @@ echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 echo WARNING: Second patch attempt exit status: $err
 echo
 echo
-[[ $err -ne 0 ]] || {
+[[ $err -eq 0 ]] || {
     echo WARNING: There were errors while patching from master branch as well
     echo WARNING: Please consider checking the follwoing list of files for eventual conflicts:
     for file in $srcFileList $testFileList:
