@@ -11,6 +11,9 @@ usage()
     exit 1
 }
 
+# Add default value for zeroOnly option
+zeroOnly=false
+
 while getopts ":zh" opt; do
     echo opt: $opt
     case ${opt} in
