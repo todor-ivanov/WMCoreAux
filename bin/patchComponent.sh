@@ -91,10 +91,10 @@ do
     file=${file#a\/test\/python\/}
     fileName=`basename $file`
     fileDir=`dirname $file`
+    # Create the file path if missing
+    mkdir -p $pythonLibPath/$fileDir
     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file
     echo dest: $pythonLibPath/$file
-    # Create  the path if missing
-    mkdir -p $pythonLibPath/$fileDir
     curl -f https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file  -o $pythonLibPath/$file || { \
         echo file: $file missing at the origin.
         echo Seems to be a new file for the curren patch.
@@ -107,6 +107,10 @@ done
 for file in $srcFileList
 do
     file=${file#a\/src\/python\/}
+    fileName=`basename $file`
+    fileDir=`dirname $file`
+    # Create the file path if missing
+    mkdir -p $pythonLibPath/$fileDir
     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file
     echo dest: $pythonLibPath/$file
     curl -f https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file  -o $pythonLibPath/$file || { \
@@ -139,6 +143,8 @@ else
     echo WARNING: There were errors while patching from TAG: $currTag
     echo WARNING: Most probably some of the files from the current patch were having changes
     echo WARNING: between the current PR and the tag deployed at the host/container.
+    echo
+    echo
     echo WARNING: TRYING TO START FROM ORIGIN/MASTER BRANCH INSTEAD:
     echo
     echo
@@ -150,7 +156,6 @@ fi
 # What we can do in such cases is to try to fetch and zero the code base for those files
 # to be patched from master and hope there are no conflicts in the PR.
 
-echo "WARNING:"
 echo "WARNING: Refreshing all files which are to be patched from origin/master branch:"
 
 # First create destination for test files if missing
@@ -159,10 +164,10 @@ do
     file=${file#a\/test\/python\/}
     fileName=`basename $file`
     fileDir=`dirname $file`
+    # Create the file path if missing
+    mkdir -p $pythonLibPath/$fileDir
     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file
     echo dest: $pythonLibPath/$file
-    # Create  the path if missing
-    mkdir -p $pythonLibPath/$fileDir
     curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file  -o $pythonLibPath/$file || { \
         echo file: $file missing at the origin.
         echo Seems to be a new file for the curren patch.
@@ -175,6 +180,10 @@ done
 for file in $srcFileList
 do
     file=${file#a\/src\/python\/}
+    fileName=`basename $file`
+    fileDir=`dirname $file`
+    # Create the file path if missing
+    mkdir -p $pythonLibPath/$fileDir
     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file
     echo dest: $pythonLibPath/$file
     curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file  -o $pythonLibPath/$file || { \
