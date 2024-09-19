@@ -71,8 +71,17 @@ do
 done
 
 echo "Patching all files starting from the original version of TAG: $currTag"
-# echo "cat $patchFile | $patchCmd"
+echo "cat $patchFile | $patchCmd"
 cat $patchFile | $patchCmd && exit
+err=$?
+
+
+echo
+echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+echo First patch attempt exit status: $err
+echo
+echo
+echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # If we are here it means something went wrong while patching some of the files.
 # Most probably some of the files are having changes between the current PR and the tag deployed.
@@ -94,5 +103,14 @@ do
 done
 
 echo "Patching all files starting from origin/master branch"
-# echo "cat $patchFile | $patchCmd"
+echo "cat $patchFile | $patchCmd"
 cat $patchFile | $patchCmd && exit
+err=$?
+
+echo
+echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+echo Second patch attempt exit status: $err
+echo
+echo
+echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
