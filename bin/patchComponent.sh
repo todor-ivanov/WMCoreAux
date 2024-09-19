@@ -134,6 +134,8 @@ if [[ $err -eq 0 ]]; then
     echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 else
     echo WARNING: First patch attempt exit status: $err
+    echo
+    echo
     echo WARNING: There were errors while patching from TAG: $currTag
     echo WARNING: Most probably some of the files from the current patch were having changes
     echo WARNING: between the current PR and the tag deployed at the host/container.
@@ -193,6 +195,7 @@ echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 echo WARNING: Second patch attempt exit status: $err
 echo
 echo
+
 [[ $err -eq 0 ]] || {
     echo WARNING: There were errors while patching from master branch as well
     echo WARNING: Please consider checking the follwoing list of files for eventual conflicts:
