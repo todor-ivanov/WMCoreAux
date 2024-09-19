@@ -82,10 +82,31 @@ else
     curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
 fi
 
-fileList=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
+srcFileList=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
+testFileList=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
 
 echo "Refreshing all files which are to be patched from the origin and TAG: $currTag"
-for file in $fileList
+
+# First create destination for test files if missing
+for file in $testFileList
+do
+    file=${file#a\/test\/python\/}
+    fileName=`basename $file`
+    fileDir=`dirname $file`
+    echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file
+    echo dest: $pythonLibPath/$file
+    # Create  the path if missing
+    mkdir -p $pythonLibPath/$fileDir
+    curl -f https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file  -o $pythonLibPath/$file || { \
+        echo file: $file missing at the origin.
+        echo Seems to be a new file for the curren patch.
+        echo Removing it from the destination as well!
+        rm -f $pythonLibPath/$file
+    }
+done
+
+# Then patch zero code base for source files
+for file in $srcFileList
 do
     file=${file#a\/src\/python\/}
     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file
@@ -120,7 +141,7 @@ echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # to be patched from master and hope there are no conflicts in the PR.
 
 echo "Refreshing all files which are to be patched from origin/master branch:"
-for file in $fileList
+for file in $srcFileList
 do
     file=${file#a\/src\/python\/}
     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file
