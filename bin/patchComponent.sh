@@ -11,9 +11,34 @@ usage()
     exit 1
 }
 
+while getopts ":zh" opt; do
+    echo opt: $opt
+    case ${opt} in
+        z)
+            zeroOnly=true
+            ;;
+        h)
+            usage
+            exit 0 ;;
+        \? )
+            echo "\nERROR: Invalid Option: -$OPTARG\n"
+            ;;
+        : )
+            echo "\nERROR: Invalid Option: -$OPTARG requires an argument\n"
+            ;;
+        *)
+            echo "We are Here: OPTARG=$OPTARG"
+            ;;
+    esac
+done
+# shift to the last  parsed option, so we can consume the patchNum with a regular shift
+shift $(expr $OPTIND - 1 )
+
+
 # if fd 0 (stdin) is open and refers to a terminal - then we are running the script directly, without a pipe
 # if fd 0 (stdin) is open but does not refer to the terminal - then we are running the script through a pipe
 if [ -t 0 ] ; then pipe=false; else pipe=true ; fi
+
 
 patchNum=$1
 shift
@@ -69,6 +94,9 @@ do
         rm -f $pythonLibPath/$file
     }
 done
+
+# exit if the user has requested to only zero the code base
+$zeroOnly && exit
 
 echo "Patching all files starting from the original version of TAG: $currTag"
 echo "cat $patchFile | $patchCmd"
