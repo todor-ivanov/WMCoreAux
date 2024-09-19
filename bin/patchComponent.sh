@@ -4,7 +4,9 @@ usage()
 {
     echo -ne "\nA simple script to facilitate component patching\n"
     echo -ne "and to decrease the development && testing turnaround time.\n"
-    echo -ne "Usage: \n"
+    echo -ne "Usage: \n ./patchComponent [-z] <patchNum>"
+    echo -ne "      -z  - only zero code base to the currently deployed tag - no patches will be applied"
+    echo -ne "Examples: "
     echo -ne "\t sudo ./patchComponent.sh 11270\n"
     echo -ne "\t git diff --no-color | sudo ./patchComponent.sh \n or:\n"
     echo -ne "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
@@ -105,7 +107,7 @@ do
     }
 done
 
-# Then patch zero code base for source files
+# Then zero code base for source files
 for file in $srcFileList
 do
     file=${file#a\/src\/python\/}
@@ -141,6 +143,26 @@ echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # to be patched from master and hope there are no conflicts in the PR.
 
 echo "Refreshing all files which are to be patched from origin/master branch:"
+
+# First create destination for test files if missing
+for file in $testFileList
+do
+    file=${file#a\/test\/python\/}
+    fileName=`basename $file`
+    fileDir=`dirname $file`
+    echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file
+    echo dest: $pythonLibPath/$file
+    # Create  the path if missing
+    mkdir -p $pythonLibPath/$fileDir
+    curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file  -o $pythonLibPath/$file || { \
+        echo file: $file missing at the origin.
+        echo Seems to be a new file for the curren patch.
+        echo Removing it from the destination as well!
+        rm -f $pythonLibPath/$file
+    }
+done
+
+# Then zero code base for source files
 for file in $srcFileList
 do
     file=${file#a\/src\/python\/}
