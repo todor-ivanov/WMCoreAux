@@ -17,7 +17,6 @@ usage()
 zeroOnly=false
 
 while getopts ":zh" opt; do
-    echo opt: $opt
     case ${opt} in
         z)
             zeroOnly=true
@@ -30,9 +29,6 @@ while getopts ":zh" opt; do
             ;;
         : )
             echo "\nERROR: Invalid Option: -$OPTARG requires an argument\n"
-            ;;
-        *)
-            echo "We are Here: OPTARG=$OPTARG"
             ;;
     esac
 done
@@ -126,23 +122,34 @@ $zeroOnly && exit
 
 echo "Patching all files starting from the original version of TAG: $currTag"
 echo "cat $patchFile | $patchCmd"
-cat $patchFile | $patchCmd && exit
+cat $patchFile | $patchCmd
 err=$?
 
 
 echo
 echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-echo First patch attempt exit status: $err
 echo
-echo
-echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+if [[ $err -eq 0 ]]; then
+    echo INFO: First patch attempt exit status: $err
+    echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+else
+    echo WARNING: First patch attempt exit status: $err
+    echo WARNING: There were errors while patching from TAG: $currTag
+    echo WARNING: Most probably some of the files from the current patch were having changes
+    echo WARNING: between the current PR and the tag deployed at the host/container.
+    echo WARNING: TRYING TO START FROM ORIGIN/MASTER BRANCH INSTEAD:
+    echo
+    echo
+fi
+
 
 # If we are here it means something went wrong while patching some of the files.
 # Most probably some of the files are having changes between the current PR and the tag deployed.
 # What we can do in such cases is to try to fetch and zero the code base for those files
 # to be patched from master and hope there are no conflicts in the PR.
 
-echo "Refreshing all files which are to be patched from origin/master branch:"
+echo "WARNING:"
+echo "WARNING: Refreshing all files which are to be patched from origin/master branch:"
 
 # First create destination for test files if missing
 for file in $testFileList
@@ -176,15 +183,23 @@ do
     }
 done
 
-echo "Patching all files starting from origin/master branch"
-echo "cat $patchFile | $patchCmd"
-cat $patchFile | $patchCmd && exit
+echo "WARNING: Patching all files starting from origin/master branch"
+echo "WARNING: cat $patchFile | $patchCmd"
+cat $patchFile | $patchCmd
 err=$?
 
 echo
 echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-echo Second patch attempt exit status: $err
+echo WARNING: Second patch attempt exit status: $err
 echo
 echo
+[[ $err -ne 0 ]] || {
+    echo WARNING: There were errors while patching from master branch as well
+    echo WARNING: Please consider checking the follwoing list of files for eventual conflicts:
+    for file in $srcFileList $testFileList:
+    do
+        echo WARNING: $pythonLibPath/$file
+    done
+}
 echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+exit $err
