@@ -54,9 +54,10 @@ else
     curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
 fi
 
+fileList=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
 
-echo "Refreshing all files which are to be patched from the origin"
-for file in `grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
+echo "Refreshing all files which are to be patched from the origin and TAG: $currTag"
+for file in $fileList
 do
     file=${file#a\/src\/python\/}
     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file
@@ -69,6 +70,29 @@ do
     }
 done
 
-echo "Patching all files starting from the original version"
-echo "cat $patchFile | $patchCmd"
-cat $patchFile | $patchCmd
+echo "Patching all files starting from the original version of TAG: $currTag"
+# echo "cat $patchFile | $patchCmd"
+cat $patchFile | $patchCmd && exit
+
+# If we are here it means something went wrong while patching some of the files.
+# Most probably some of the files are having changes between the current PR and the tag deployed.
+# What we can do in such cases is to try to fetch and zero the code base for those files
+# to be patched from master and hope there are no conflicts in the PR.
+
+echo "Refreshing all files which are to be patched from origin/master branch:"
+for file in $fileList
+do
+    file=${file#a\/src\/python\/}
+    echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file
+    echo dest: $pythonLibPath/$file
+    curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file  -o $pythonLibPath/$file || { \
+        echo file: $file missing at the origin.
+        echo Seems to be a new file for the curren patch.
+        echo Removing it from the destination as well!
+        rm -f $pythonLibPath/$file
+    }
+done
+
+echo "Patching all files starting from origin/master branch"
+# echo "cat $patchFile | $patchCmd"
+cat $patchFile | $patchCmd && exit
