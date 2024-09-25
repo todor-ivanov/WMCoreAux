@@ -45,7 +45,7 @@ patchNum=$1
 shift
 
 [[ -z $patchNum ]] && patchNum=temp
-echo "Patching WMCore code with PR: $pathcNum"
+echo "Patching WMCore code with PR: $patchNum"
 
 currTag=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
 echo "Current WMCoreTag: $currTag"
@@ -136,6 +136,7 @@ echo
 if [[ $err -eq 0 ]]; then
     echo INFO: First patch attempt exit status: $err
     echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    exit
 else
     echo WARNING: First patch attempt exit status: $err
     echo
