@@ -1,8 +1,12 @@
 #!/bin/bash
 
-# A simple Utilitarian script to be used for patching all Running backends in
-# a WMCore central services K8 cluster with a patch based on an upstream PR
-# usage: ./patchCluster.sh 12077
+usage()
+{
+    echo -ne "A simple script to be used for patching all Running backends in"
+    echo -ne "a WMCore central services K8 cluster with a patch based on an upstream PR"
+    echo -ne "Usage: \n ./patchCluster.sh [-p <"SpaceSepListOfPods">] 12077"
+    echo -ne "        -p - Space separated list of pods to be patched (Mind the quotation marks)"
+}
 
 currPod=""
 zeroOnly=false
@@ -45,7 +49,7 @@ echo CLUSTER: $currentCluster
 echo --------------------------------------------------------
 
 if [[ -n $currPod ]] ; then
-    echo WARNING: We are about to patch backend pod: $currPod at k8 cluster: $currentCluster with patchNum: $patchNum
+    echo WARNING: We are about to patch backend pods: $currPod at k8 cluster: $currentCluster with patchNum: $patchNum
 else
     echo WARNING: We are about to patch any running backend at k8 cluster: $currentCluster with patchNum: $patchNum
 fi
