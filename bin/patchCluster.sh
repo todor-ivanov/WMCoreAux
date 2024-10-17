@@ -2,11 +2,12 @@
 
 usage()
 {
-    echo -ne "A simple script to be used for patching all Running backends in"
-    echo -ne "a WMCore central services K8 cluster with a patch based on an upstream PR"
-    echo -ne "Usage: \n ./patchCluster.sh [-p <"SpaceSepListOfPods">] [-s <serviceName>] 12077"
-    echo -ne "        -p - Space separated list of pods to be patched (Mind the quotation marks)"
-    echo -ne "        -s - Service name whose pods to be patched (if found)"
+    echo -e "\nA simple script to be used for patching all Running backends in"
+    echo -e "a WMCore central services K8 cluster with a patch based on an upstream PR"
+    echo -e "Usage: \n ./patchCluster.sh [-p <"SpaceSepListOfPods">] [-s <serviceName>] 12077"
+    echo -e "        -p - Space separated list of pods to be patched (Mind the quotation marks)"
+    echo -e "        -s - Service name whose pods to be patched (if found)"
+    echo -e "        -z - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
 }
 
 # Set defaults

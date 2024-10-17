@@ -2,15 +2,14 @@
 
 usage()
 {
-    echo -ne "\nA simple script to facilitate component patching\n"
-    echo -ne "and to decrease the development && testing turnaround time.\n"
-    echo -ne "Usage: \n ./patchComponent [-z] <patchNum>"
-    echo -ne "      -z  - only zero code base to the currently deployed tag - no patches will be applied"
-    echo -ne "Examples: "
-    echo -ne "\t sudo ./patchComponent.sh 11270\n"
-    echo -ne "\t git diff --no-color | sudo ./patchComponent.sh \n or:\n"
-    echo -ne "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
-    exit 1
+    echo -e "\nA simple script to facilitate component patching\n"
+    echo -e "and to decrease the development && testing turnaround time.\n"
+    echo -e "Usage: \n ./patchComponent [-z] <patchNum>"
+    echo -e "      -z  - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied\n"
+    echo -e "Examples: \n"
+    echo -e "\t sudo ./patchComponent.sh 11270\n"
+    echo -e "\t git diff --no-color | sudo ./patchComponent.sh \n or:\n"
+    echo -e "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
 }
 
 # Add default value for zeroOnly option
@@ -85,41 +84,98 @@ testFileList=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort
 
 echo "Refreshing all files which are to be patched from the origin and TAG: $currTag"
 
+_createTestFilesDst() {
+    # A simple function to create test files destination for not breaking the patches
+    # because of a missing destination:
+    # :param $1:   The source branch to be used for checking the files: could be TAG or Master
+    # :param $2-*: The list of files to be checked out
+    local srcBranch=$1
+    shift
+    local testFileList=$*
+    for file in $testFileList
+    do
+        file=${file#a\/test\/python\/}
+        fileName=`basename $file`
+        fileDir=`dirname $file`
+        # Create the file path if missing
+        mkdir -p $pythonLibPath/$fileDir
+        echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/test/python/$file
+        echo dest: $pythonLibPath/$file
+        curl -f https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/test/python/$file  -o $pythonLibPath/$file || {
+            echo file: $file missing at the origin.
+            echo Seems to be a new file for the curren patch.
+            echo Removing it from the destination as well!
+            rm -f $pythonLibPath/$file
+        }
+    done
+}
+
+_zeroCodeBase() {
+    # A simple function to zero the code base for a set of files starting from
+    # a given tag or branch at the origin
+    # :param $1:   The source branch to be used for checking the files: could be TAG or Master
+    # :param $2-*: The list of files to be checked out
+    local srcBranch=$1
+    shift
+    local srcFileList=$*
+    for file in $srcFileList
+    do
+        file=${file#a\/src\/python\/}
+        fileName=`basename $file`
+        fileDir=`dirname $file`
+        # Create the file path if missing
+        mkdir -p $pythonLibPath/$fileDir
+        echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/src/python/$file
+        echo dest: $pythonLibPath/$file
+        curl -f https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/src/python/$file  -o $pythonLibPath/$file || {
+            echo file: $file missing at the origin.
+            echo Seems to be a new file for the curren patch.
+            echo Removing it from the destination as well!
+            rm -f $pythonLibPath/$file
+        }
+    done
+}
+
 # First create destination for test files if missing
-for file in $testFileList
-do
-    file=${file#a\/test\/python\/}
-    fileName=`basename $file`
-    fileDir=`dirname $file`
-    # Create the file path if missing
-    mkdir -p $pythonLibPath/$fileDir
-    echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file
-    echo dest: $pythonLibPath/$file
-    curl -f https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file  -o $pythonLibPath/$file || { \
-        echo file: $file missing at the origin.
-        echo Seems to be a new file for the curren patch.
-        echo Removing it from the destination as well!
-        rm -f $pythonLibPath/$file
-    }
-done
+_createTestFilesDst $currTag $testFileList
+
+# for file in $testFileList
+# do
+#     file=${file#a\/test\/python\/}
+#     fileName=`basename $file`
+#     fileDir=`dirname $file`
+#     # Create the file path if missing
+#     mkdir -p $pythonLibPath/$fileDir
+#     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file
+#     echo dest: $pythonLibPath/$file
+#     curl -f https://raw.githubusercontent.com/dmwm/WMCore/$currTag/test/python/$file  -o $pythonLibPath/$file || { \
+#         echo file: $file missing at the origin.
+#         echo Seems to be a new file for the curren patch.
+#         echo Removing it from the destination as well!
+#         rm -f $pythonLibPath/$file
+#     }
+# done
+
 
 # Then zero code base for source files
-for file in $srcFileList
-do
-    file=${file#a\/src\/python\/}
-    fileName=`basename $file`
-    fileDir=`dirname $file`
-    # Create the file path if missing
-    mkdir -p $pythonLibPath/$fileDir
-    echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file
-    echo dest: $pythonLibPath/$file
-    curl -f https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file  -o $pythonLibPath/$file || { \
-        echo file: $file missing at the origin.
-        echo Seems to be a new file for the curren patch.
-        echo Removing it from the destination as well!
-        rm -f $pythonLibPath/$file
-    }
-done
+_zeroCodeBase $currTag $srcFileList
+
+# for file in $srcFileList
+# do
+#     file=${file#a\/src\/python\/}
+#     fileName=`basename $file`
+#     fileDir=`dirname $file`
+#     # Create the file path if missing
+#     mkdir -p $pythonLibPath/$fileDir
+#     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file
+#     echo dest: $pythonLibPath/$file
+#     curl -f https://raw.githubusercontent.com/dmwm/WMCore/$currTag/src/python/$file  -o $pythonLibPath/$file || { \
+#         echo file: $file missing at the origin.
+#         echo Seems to be a new file for the curren patch.
+#         echo Removing it from the destination as well!
+#         rm -f $pythonLibPath/$file
+#     }
+# done
 
 # exit if the user has requested to only zero the code base
 $zeroOnly && exit
@@ -159,41 +215,45 @@ fi
 
 echo "WARNING: Refreshing all files which are to be patched from origin/master branch:"
 
-# First create destination for test files if missing
-for file in $testFileList
-do
-    file=${file#a\/test\/python\/}
-    fileName=`basename $file`
-    fileDir=`dirname $file`
-    # Create the file path if missing
-    mkdir -p $pythonLibPath/$fileDir
-    echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file
-    echo dest: $pythonLibPath/$file
-    curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file  -o $pythonLibPath/$file || { \
-        echo file: $file missing at the origin.
-        echo Seems to be a new file for the curren patch.
-        echo Removing it from the destination as well!
-        rm -f $pythonLibPath/$file
-    }
-done
+# First create destination for test files from master if missing
+_createTestFilesDst "master" $testFileList
 
-# Then zero code base for source files
-for file in $srcFileList
-do
-    file=${file#a\/src\/python\/}
-    fileName=`basename $file`
-    fileDir=`dirname $file`
-    # Create the file path if missing
-    mkdir -p $pythonLibPath/$fileDir
-    echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file
-    echo dest: $pythonLibPath/$file
-    curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file  -o $pythonLibPath/$file || { \
-        echo file: $file missing at the origin.
-        echo Seems to be a new file for the curren patch.
-        echo Removing it from the destination as well!
-        rm -f $pythonLibPath/$file
-    }
-done
+# for file in $testFileList
+# do
+#     file=${file#a\/test\/python\/}
+#     fileName=`basename $file`
+#     fileDir=`dirname $file`
+#     # Create the file path if missing
+#     mkdir -p $pythonLibPath/$fileDir
+#     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file
+#     echo dest: $pythonLibPath/$file
+#     curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/test/python/$file  -o $pythonLibPath/$file || { \
+#         echo file: $file missing at the origin.
+#         echo Seems to be a new file for the curren patch.
+#         echo Removing it from the destination as well!
+#         rm -f $pythonLibPath/$file
+#     }
+# done
+
+# Then zero code base for source files from master
+_zeroCodeBase "master" $srcFileList
+
+# for file in $srcFileList
+# do
+#     file=${file#a\/src\/python\/}
+#     fileName=`basename $file`
+#     fileDir=`dirname $file`
+#     # Create the file path if missing
+#     mkdir -p $pythonLibPath/$fileDir
+#     echo orig: https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file
+#     echo dest: $pythonLibPath/$file
+#     curl -f https://raw.githubusercontent.com/dmwm/WMCore/master/src/python/$file  -o $pythonLibPath/$file || { \
+#         echo file: $file missing at the origin.
+#         echo Seems to be a new file for the curren patch.
+#         echo Removing it from the destination as well!
+#         rm -f $pythonLibPath/$file
+#     }
+# done
 
 echo "WARNING: Patching all files starting from origin/master branch"
 echo "WARNING: cat $patchFile | $patchCmd"
@@ -207,8 +267,10 @@ echo
 echo
 
 [[ $err -eq 0 ]] || {
+    _zeroCodeBase $currTag $srcFileList
     echo WARNING: There were errors while patching from master branch as well
-    echo WARNING: Please consider checking the follwoing list of files for eventual conflicts:
+    echo WARNING: Returning all files back to their original version at TAG: $currTag
+    echo WARNING: Please consider checking the follwoing list of files for eventual remnants of code conflicts:
     for file in $srcFileList $testFileList:
     do
         echo WARNING: $pythonLibPath/$file
