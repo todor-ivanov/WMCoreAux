@@ -57,7 +57,7 @@ pythonLibPaths="$pythonLibPaths $(python -c "from distutils.sysconfig import get
 
 for path in $pythonLibPaths
 do
-    [[ -d $path/WMCore ]] && { pythonLibPath=$path; echo "Source code found at: $path"; break ;}
+    [[ -d $path/WMCore ]] && { pythonLibPath=$path; echo "INFO: Source code found at: $path"; break ;}
 done
 
 [[ -z $pythonLibPath  ]] && { echo "ERROR: Could not find WMCore source to patch"; exit  1 ;}

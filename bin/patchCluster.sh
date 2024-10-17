@@ -43,20 +43,20 @@ shift $(expr $OPTIND - 1 )
 patchNum=$*
 if $zeroOnly; then
     echo ========================================================
-    echo "Only Zeroing the code base No patches will be applied"
+    echo "INFO: Only Zeroing the code base No patches will be applied"
 elif [[ -z $patchNum ]]; then
     echo ========================================================
     echo ERROR: No patchNum provided; exit
 else
     echo ========================================================
-    echo "Applying patch: $patchNum"
+    echo "INFO: Applying patch: $patchNum"
 fi
 
 currCluster=`kubectl config get-clusters |grep -v NAME`
 nameSpace=dmwm
 
 echo ========================================================
-echo CLUSTER: $currCluster
+echo INFO: CLUSTER: $currCluster
 echo --------------------------------------------------------
 
 # First try to find any pod from the service name provided and then extend the list in currPods:
@@ -114,10 +114,10 @@ for pod in $runningPods
 do
     echo
     echo --------------------------------------------------------
-    echo $pod:
-    echo Executing: kubectl exec -it $pod -n $nameSpace -- /bin/bash -c \"$podCmd\"
+    echo INFO: $pod:
+    echo INFO: Executing: kubectl exec -it $pod -n $nameSpace -- /bin/bash -c \"$podCmd\"
     kubectl exec -it $pod -n $nameSpace -- /bin/bash -c "$podCmd"
     echo
-    echo Executing: kubectl exec $pod -n $nameSpace -- /bin/bash -c \"$restartCmd\"
+    echo INFO: Executing: kubectl exec $pod -n $nameSpace -- /bin/bash -c \"$restartCmd\"
     kubectl exec $pod -n $nameSpace -- /bin/bash -c "$restartCmd"
 done
