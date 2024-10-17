@@ -79,8 +79,21 @@ else
     curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
 fi
 
-srcFileList=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
-testFileList=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
+srcFileListTemp=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
+testFileListTemp=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
+
+# reduce paths for both src and test file lists
+srcFileList=""
+for file in $srcFileListTemp
+do
+    file=${file#a\/src\/python\/} && srcFileList="$srcFileList $file"
+done
+
+testFileList=""
+for file in $testFileListTemp
+do
+    file=${file#a\/test\/python\/} && testFileList="$srcFileList $file"
+done
 
 echo "Refreshing all files which are to be patched from the origin and TAG: $currTag"
 
@@ -94,7 +107,7 @@ _createTestFilesDst() {
     local testFileList=$*
     for file in $testFileList
     do
-        file=${file#a\/test\/python\/}
+        # file=${file#a\/test\/python\/}
         fileName=`basename $file`
         fileDir=`dirname $file`
         # Create the file path if missing
@@ -120,7 +133,7 @@ _zeroCodeBase() {
     local srcFileList=$*
     for file in $srcFileList
     do
-        file=${file#a\/src\/python\/}
+        # file=${file#a\/src\/python\/}
         fileName=`basename $file`
         fileDir=`dirname $file`
         # Create the file path if missing
