@@ -83,12 +83,12 @@ _createTestFilesDst() {
         fileDir=`dirname $file`
         # Create the file path if missing
         mkdir -p $pythonLibPath/$fileDir
-        echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/test/python/$file
-        echo dest: $pythonLibPath/$file
+        echo INFO: orig: https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/test/python/$file
+        echo INFO: dest: $pythonLibPath/$file
         curl -f https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/test/python/$file  -o $pythonLibPath/$file || {
-            echo file: $file missing at the origin.
-            echo Seems to be a new file for the curren patch.
-            echo Removing it from the destination as well!
+            echo INFO: file: $file missing at the origin.
+            echo INFO: Seems to be a new file for the curren patch.
+            echo INFO: Removing it from the destination as well!
             rm -f $pythonLibPath/$file
         }
     done
@@ -109,12 +109,12 @@ _zeroCodeBase() {
         fileDir=`dirname $file`
         # Create the file path if missing
         mkdir -p $pythonLibPath/$fileDir
-        echo orig: https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/src/python/$file
-        echo dest: $pythonLibPath/$file
+        echo INFO: orig: https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/src/python/$file
+        echo INFO: dest: $pythonLibPath/$file
         curl -f https://raw.githubusercontent.com/dmwm/WMCore/$srcBranch/src/python/$file  -o $pythonLibPath/$file || {
-            echo file: $file missing at the origin.
-            echo Seems to be a new file for the curren patch.
-            echo Removing it from the destination as well!
+            echo INFO: file: $file missing at the origin.
+            echo INFO: Seems to be a new file for the curren patch.
+            echo INFO: Removing it from the destination as well!
             rm -f $pythonLibPath/$file
         }
     done
@@ -175,10 +175,14 @@ _zeroCodeBase $currTag $srcFileList
 $zeroOnly && exit
 
 err=0
+echo
+echo
 echo "INFO: Patching all files starting from the original version of TAG: $currTag"
 for patchNum in $patchList
 do
     patchFile=/tmp/$patchNum.patch
+    echo
+    echo
     echo "INFO: ----------------- Currently applying patch: $patchNum -----------------"
     echo "INFO: cat $patchFile | $patchCmd"
     cat $patchFile | $patchCmd
@@ -221,14 +225,16 @@ _createTestFilesDst "master" $testFileList
 _zeroCodeBase "master" $srcFileList
 
 err=0
-echo "Patching all files starting from the original version of TAG: $currTag"
+echo
+echo
 echo "WARNING: Patching all files starting from origin/master branch"
-echo "WARNING: cat $patchFile | $patchCmd"
 for patchNum in $patchList
 do
     patchFile=/tmp/$patchNum.patch
+    echo
+    echo
     echo "WARNING: --------------- Currently applying patch: $patchNum ---------------"
-    echo "WARNING:  cat $patchFile | $patchCmd"
+    echo "WARNING: cat $patchFile | $patchCmd"
     cat $patchFile | $patchCmd
     let err+=$?
 done
