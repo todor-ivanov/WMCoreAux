@@ -250,15 +250,13 @@ echo
 echo
 
 [[ $err -eq 0 ]] || {
-    echo
-    echo WARNING: There were errors while patching from master branch as well
-    echo WARNING: Returning all files back to their original version at TAG: $currTag
-    echo
-    echo
 
     _createTestFilesDst $currTag $testFileList
     _zeroCodeBase $currTag $srcFileList
 
+    echo
+    echo WARNING: There were errors while patching from master branch as well
+    echo WARNING: All files have been rolled back to their original version at TAG: $currTag
     echo
     echo
     echo WARNING: Please consider checking the follwoing list of files for eventual remnants of code conflicts:
