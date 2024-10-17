@@ -195,6 +195,7 @@ echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 echo
 if [[ $err -eq 0 ]]; then
     echo INFO: First patch attempt exit status: $err
+    echo INFO: ALL GOOD
     echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     exit
 else
@@ -255,6 +256,7 @@ echo
     _zeroCodeBase $currTag $srcFileList
 
     echo
+    echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     echo WARNING: There were errors while patching from master branch as well
     echo WARNING: All files have been rolled back to their original version at TAG: $currTag
     echo
