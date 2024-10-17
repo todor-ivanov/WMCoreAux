@@ -4,7 +4,7 @@ usage()
 {
     echo -e "\nA simple script to be used for patching all Running backends in"
     echo -e "a WMCore central services K8 cluster with a patch based on an upstream PR"
-    echo -e "Usage: \n ./patchCluster.sh [-p <"SpaceSepListOfPods">] [-s <serviceName>] 12077"
+    echo -e "Usage: \n ./patchCluster.sh [-p <\"SpaceSepListOfPods\">] [-s <serviceName>] [-z] 12077 12120 ..."
     echo -e "        -p - Space separated list of pods to be patched (Mind the quotation marks)"
     echo -e "        -s - Service name whose pods to be patched (if found)"
     echo -e "        -z - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
@@ -40,7 +40,7 @@ done
 # shift to the last  parsed option, so we can consume the patchNum with a regular shift
 shift $(expr $OPTIND - 1 )
 
-patchNum=$1
+patchNum=$*
 if $zeroOnly; then
     echo ========================================================
     echo "Only Zeroing the code base No patches will be applied"

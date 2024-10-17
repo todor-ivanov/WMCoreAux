@@ -4,13 +4,15 @@ usage()
 {
     echo -e "\nA simple script to facilitate component patching\n"
     echo -e "and to decrease the development && testing turnaround time.\n"
-    echo -e "Usage: \n ./patchComponent [-z] <patchNum>"
+    echo -e "Usage: \n ./patchComponent [-z] <patchNum> <patchNum> ..."
     echo -e "      -z  - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied\n"
     echo -e "Examples: \n"
-    echo -e "\t sudo ./patchComponent.sh 11270\n"
+    echo -e "\t sudo ./patchComponent.sh 11270 12120 \n"
     echo -e "\t git diff --no-color | sudo ./patchComponent.sh \n or:\n"
     echo -e "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
 }
+
+
 
 # Add default value for zeroOnly option
 zeroOnly=false
@@ -39,15 +41,13 @@ shift $(expr $OPTIND - 1 )
 # if fd 0 (stdin) is open but does not refer to the terminal - then we are running the script through a pipe
 if [ -t 0 ] ; then pipe=false; else pipe=true ; fi
 
+patchList=$*
+[[ -z $patchList ]] && patchList="temp"
 
-patchNum=$1
-shift
-
-[[ -z $patchNum ]] && patchNum=temp
-echo "Patching WMCore code with PR: $patchNum"
+echo "INFO: Patching WMCore code with PRs: $patchList"
 
 currTag=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
-echo "Current WMCoreTag: $currTag"
+echo "INFO: Current WMCoreTag: $currTag"
 
 
 # Find all possible locations for the component source
@@ -61,42 +61,13 @@ do
 done
 
 [[ -z $pythonLibPath  ]] && { echo "ERROR: Could not find WMCore source to patch"; exit  1 ;}
-echo "Current PythonLibPath: $pythonLibPath"
+echo "INFO: Current PythonLibPath: $pythonLibPath"
 
+# Set patch command parameters
 stripLevel=3
-patchFile=/tmp/$patchNum.patch
-
 patchCmd="patch -t --verbose -b --version-control=numbered -d $pythonLibPath -p$stripLevel"
 
-
-if $pipe
-then
-    # if we run through a pipeline create the temporary patch file for later parsing
-    echo "Creating a temporary patchFile at: $patchFile"
-    cat <&0 > $patchFile
-else
-    echo "Downloading a temporary patchFile at: $patchFile"
-    curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
-fi
-
-srcFileListTemp=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
-testFileListTemp=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
-
-# reduce paths for both src and test file lists
-srcFileList=""
-for file in $srcFileListTemp
-do
-    file=${file#a\/src\/python\/} && srcFileList="$srcFileList $file"
-done
-
-testFileList=""
-for file in $testFileListTemp
-do
-    file=${file#a\/test\/python\/} && testFileList="$srcFileList $file"
-done
-
-echo "Refreshing all files which are to be patched from the origin and TAG: $currTag"
-
+# Define Auxiliary functions
 _createTestFilesDst() {
     # A simple function to create test files destination for not breaking the patches
     # because of a missing destination:
@@ -149,6 +120,47 @@ _zeroCodeBase() {
     done
 }
 
+
+#TODO: ....HERE TO START ITERATING THROUGH THE PATCH LIST
+
+# Download/Create all needed patch files:
+
+srcFileListTemp=""
+testFileListTemp=""
+
+for patchNum in $patchList
+do
+    patchFile=/tmp/$patchNum.patch
+
+    if $pipe
+    then
+        # if we run through a pipeline create the temporary patch file for later parsing
+        echo "INFO: Creating a temporary patchFile at: $patchFile"
+        cat <&0 > $patchFile
+    else
+        echo "INFO: Downloading a temporary patchFile at: $patchFile"
+        curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
+    fi
+
+    srcFileListTemp=$srcFileListTemp `grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
+    testFileListTemp=$testFileListTemp `grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
+done
+
+# Reduce paths for both src and test file lists to the path depth known to the WMCore modules/packages
+srcFileList=""
+for file in $srcFileListTemp
+do
+    file=${file#a\/src\/python\/} && srcFileList="$srcFileList $file"
+done
+
+testFileList=""
+for file in $testFileListTemp
+do
+    file=${file#a\/test\/python\/} && testFileList="$srcFileList $file"
+done
+
+echo "INFO: Refreshing all files which are to be patched from the origin and TAG: $currTag"
+
 # First create destination for test files from currTag if missing
 _createTestFilesDst $currTag $testFileList
 
@@ -160,11 +172,16 @@ _zeroCodeBase $currTag $srcFileList
 # exit if the user has requested to only zero the code base
 $zeroOnly && exit
 
-echo "Patching all files starting from the original version of TAG: $currTag"
-echo "cat $patchFile | $patchCmd"
-cat $patchFile | $patchCmd
-err=$?
-
+err=0
+echo "INFO: Patching all files starting from the original version of TAG: $currTag"
+for patchNum in $patchList
+do
+    patchFile=/tmp/$patchNum.patch
+    echo "INFO: ----------------- Currently applying patch: $patchNum -----------------"
+    echo "INFO: cat $patchFile | $patchCmd"
+    cat $patchFile | $patchCmd
+    let err+=$?
+done
 
 echo
 echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -201,10 +218,19 @@ _createTestFilesDst "master" $testFileList
 # Then zero code base for source files from master
 _zeroCodeBase "master" $srcFileList
 
+err=0
+echo "Patching all files starting from the original version of TAG: $currTag"
 echo "WARNING: Patching all files starting from origin/master branch"
 echo "WARNING: cat $patchFile | $patchCmd"
-cat $patchFile | $patchCmd
-err=$?
+for patchNum in $patchList
+do
+    patchFile=/tmp/$patchNum.patch
+    echo "WARNING: --------------- Currently applying patch: $patchNum ---------------"
+    echo "WARNING:  cat $patchFile | $patchCmd"
+    cat $patchFile | $patchCmd
+    let err+=$?
+done
+
 
 echo
 echo +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
