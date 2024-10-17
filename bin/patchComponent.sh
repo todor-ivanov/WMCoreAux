@@ -160,8 +160,9 @@ do
 
 done
 
-
+echo
 echo "INFO: Refreshing all files which are to be patched from the origin and TAG: $currTag"
+echo
 
 # First create destination for test files from currTag if missing
 _createTestFilesDst $currTag $testFileList
@@ -216,7 +217,9 @@ fi
 # What we can do in such cases is to try to fetch and zero the code base for those files
 # to be patched from master and hope there are no conflicts in the PR.
 
+echo
 echo "WARNING: Refreshing all files which are to be patched from origin/master branch:"
+echo
 
 # First create destination for test files from master if missing
 _createTestFilesDst "master" $testFileList
@@ -247,9 +250,17 @@ echo
 echo
 
 [[ $err -eq 0 ]] || {
-    _zeroCodeBase $currTag $srcFileList
+    echo
     echo WARNING: There were errors while patching from master branch as well
     echo WARNING: Returning all files back to their original version at TAG: $currTag
+    echo
+    echo
+
+    _createTestFilesDst $currTag $testFileList
+    _zeroCodeBase $currTag $srcFileList
+
+    echo
+    echo
     echo WARNING: Please consider checking the follwoing list of files for eventual remnants of code conflicts:
     for file in $srcFileList $testFileList
     do
