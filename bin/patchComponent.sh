@@ -142,8 +142,10 @@ do
         curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
     fi
 
-    srcFileListTemp="$srcFileListTemp `grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`"
-    testFileListTemp="$testFileListTemp `grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`"
+    srcFiles=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
+    testFiles=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
+    srcFileListTemp="$srcFileListTemp $srcFiles"
+    testFileListTemp="$testFileListTemp $testFiles"
 done
 
 # Reduce paths for both src and test file lists to the path depth known to the WMCore modules/packages
