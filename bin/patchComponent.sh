@@ -125,8 +125,8 @@ _zeroCodeBase() {
 
 # Download/Create all needed patch files:
 
-srcFileListTemp=""
-testFileListTemp=""
+srcFileList=""
+testFileList=""
 
 for patchNum in $patchList
 do
@@ -142,24 +142,24 @@ do
         curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
     fi
 
-    srcFiles=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
-    testFiles=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
-    srcFileListTemp="$srcFileListTemp $srcFiles"
-    testFileListTemp="$testFileListTemp $testFiles"
+    # Parse a list of files changed only by the current patch
+    srcFileListTemp=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
+    testFileListTemp=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
+
+    # Reduce paths for both src and test file lists to the path depth known to
+    # the WMCore modules/packages and add them to the global scope file lists
+    for file in $srcFileListTemp
+    do
+        file=${file#a\/src\/python\/} && srcFileList="$srcFileList $file"
+    done
+
+    for file in $testFileListTemp
+    do
+        file=${file#a\/test\/python\/} && testFileList="$srcFileList $file"
+    done
+
 done
 
-# Reduce paths for both src and test file lists to the path depth known to the WMCore modules/packages
-srcFileList=""
-for file in $srcFileListTemp
-do
-    file=${file#a\/src\/python\/} && srcFileList="$srcFileList $file"
-done
-
-testFileList=""
-for file in $testFileListTemp
-do
-    file=${file#a\/test\/python\/} && testFileList="$srcFileList $file"
-done
 
 echo "INFO: Refreshing all files which are to be patched from the origin and TAG: $currTag"
 
