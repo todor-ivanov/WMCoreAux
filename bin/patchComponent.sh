@@ -4,10 +4,12 @@ usage()
 {
     echo -e "\nA simple script to facilitate component patching\n"
     echo -e "and to decrease the development && testing turnaround time.\n"
-    echo -e "Usage: \n ./patchComponent [-z] <patchNum> <patchNum> ..."
+    echo -e "Usage: \n ./patchComponent [-z] [-f <patchFile>] <patchNum> <patchNum> ..."
     echo -e "      -z  - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied\n"
+    echo -e "      -f  - apply the specified patch file"
     echo -e "Examples: \n"
     echo -e "\t sudo ./patchComponent.sh 11270 12120 \n"
+    echo -e "\t sudo ./patchComponent.sh -f /tmp/11270.patch \n"
     echo -e "\t git diff --no-color | sudo ./patchComponent.sh \n or:\n"
     echo -e "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
 }
@@ -17,8 +19,11 @@ usage()
 # Add default value for zeroOnly option
 zeroOnly=false
 
-while getopts ":zh" opt; do
+while getopts ":f:zh" opt; do
     case ${opt} in
+        f)
+            extPatchFile=$OPTARG
+            ;;
         z)
             zeroOnly=true
             ;;
@@ -42,7 +47,7 @@ shift $(expr $OPTIND - 1 )
 if [ -t 0 ] ; then pipe=false; else pipe=true ; fi
 
 patchList=$*
-[[ -z $patchList ]] && patchList="temp"
+# [[ -z $patchList ]] && patchList="temp"
 
 echo "INFO: Patching WMCore code with PRs: $patchList"
 
@@ -121,27 +126,48 @@ _zeroCodeBase() {
 }
 
 
-#TODO: ....HERE TO START ITERATING THROUGH THE PATCH LIST
+# DONE: ....HERE TO START ITERATING THROUGH THE PATCH LIST
 
-# Download/Create all needed patch files:
+# Create the full list of patch files to be applied - keeping the order
+# from the original patch list as provided at the command line
+patchFileList=""
+_createPatchFiles(){
+    local patchFile
 
-srcFileList=""
-testFileList=""
-
-for patchNum in $patchList
-do
-    patchFile=/tmp/$patchNum.patch
-
-    if $pipe
-    then
-        # if we run through a pipeline create the temporary patch file for later parsing
-        echo "INFO: Creating a temporary patchFile at: $patchFile"
+    # Check if we are running from a pipe
+    $pipe && {
+        patchFile="/tmp/pipeTmp.patch"
+        patchFileList=$patchFile
+        echo "INFO: Creating a temporary patchFile from stdin at: $patchFile"
         cat <&0 > $patchFile
-    else
+        return
+    }
+
+    # Check if we were sent a file to patch from
+    [[ -n $extPatchFile ]] && {
+        patchFile=$extPatchFile
+        patchFileList=$patchFile
+        echo "INFO: Using command line provided patch file: $patchFile"
+        return
+    }
+
+    # Finally build the list of patch files to be applied from the patchNums provided at the command line
+    for patchNum in $patchList
+    do
+        patchFile=/tmp/$patchNum.patch
+        patchFileList="$patchFileList $patchFileList"
         echo "INFO: Downloading a temporary patchFile at: $patchFile"
         curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
-    fi
+    done
+}
 
+_createPatchFiles
+
+# Build full lists of files altered by the given set of patch files to be applied
+srcFileList=""
+testFileList=""
+for patchFile in $patchFileList
+do
     # Parse a list of files changed only by the current patch
     srcFileListTemp=`grep diff $patchFile |grep "a/src/python" |awk '{print $3}' |sort |uniq`
     testFileListTemp=`grep diff $patchFile |grep "a/test/python" |awk '{print $3}' |sort |uniq`
@@ -179,9 +205,8 @@ err=0
 echo
 echo
 echo "INFO: Patching all files starting from the original version of TAG: $currTag"
-for patchNum in $patchList
+for patchFile  in $patchFileList
 do
-    patchFile=/tmp/$patchNum.patch
     echo
     echo
     echo "INFO: ----------------- Currently applying patch: $patchNum -----------------"
@@ -232,9 +257,8 @@ err=0
 echo
 echo
 echo "WARNING: Patching all files starting from origin/master branch"
-for patchNum in $patchList
+for patchFile in $patchFileList
 do
-    patchFile=/tmp/$patchNum.patch
     echo
     echo
     echo "WARNING: --------------- Currently applying patch: $patchNum ---------------"
