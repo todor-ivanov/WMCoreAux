@@ -125,6 +125,7 @@ read x && [[ $x =~ (y|yes|Yes|YES) ]] || { echo WARNING: Exit on user request!; 
 echo ========================================================
 
 
+# -----------------------------------------------------------
 # Build patchComponent.sh script command to be executed at the pod:
 
 # NOTE: We do not support patching from file and patching from command line simultaneously
@@ -138,17 +139,33 @@ $zeroCodeBase || podCmdOpts="$podCmdOpts -n"
 
 [[ -n $extPatchFile ]] && { patchFile="/tmp/`basename $extPatchFile`"
                             podCmdOpts="$podCmdOpts -f $patchFile" ;}
+
+# NOTE: We are about to create the pipeTmp_****.patch file from stdIn here
+#       And we are about to call `patchComponent.sh` through -f option, but we must
+#       explicitly break the redirection from the pipe command, because otherwise
+#       it will be kept through out the call to `patchComponent.sh` and will cause
+#       the $pipe flag to take precedence over the -f flag inside `patchComponent.sh`
+#       Then the so sent file will be ignored. What we need to do here is, once we create
+#       the temporary patch file from stdin (currently redirected through the pipe)
+#       to open again fd 0 (stdin) and redirect it to a tty terminal.
 $pipe && { patchFile="/tmp/pipeTmp_$(id -u).patch"
            extPatchFile=$patchFile
            podCmdOpts="$podCmdOpts -f $patchFile"
            echo "INFO: Creating a temporary patchFile from stdin at: $patchFile"
-           cat <&0 > $patchFile ;}
+           cat <&0 > $patchFile
+           exec 0<>/dev/tty
+           # the flag bellow is just for debugging purposes, never used after the printout
+           [[ -t 0 ]] && newPipeFlag=false || newPipeFlag=true
+           echo DEBUG: newPipeFlag=$newPipeFlag
+           }
 
 podCmd="$podCmdActions && sudo /data/patchComponent.sh $podCmdOpts $patchNum "
 restartCmd="/data/manage restart && sleep 1 && /data/manage status"
 
 echo
 echo DEBUG: podCmd: $podCmd
+# -----------------------------------------------------------
+
 
 if [[ -n $currPods ]] ; then
     runningPods=$currPods
@@ -170,7 +187,7 @@ do
     echo INFO: $pod:
 
     if $pipe || [[ -n $extPatchFile ]]; then
-        echo INFO: Copy any external patchFiles provided:
+        echo INFO: Copying any external patchFiles provided: $extPatchFile
         echo INFO: Executing: kubectl -n $nameSpace  cp $extPatchFile $pod:$patchFile
         kubectl -n $nameSpace  cp $extPatchFile $pod:$patchFile || {
             echo ERROR: While copying patch files to pod:$pod
@@ -178,7 +195,8 @@ do
             continue
         }
     fi
-
+    echo
+    echo --------------------------------------------------------
     echo INFO: Patching the services at pod: $pod:
     echo INFO: Executing: kubectl exec -it $pod -n $nameSpace -- /bin/bash -c \"$podCmd\"
     kubectl exec -it $pod -n $nameSpace -- /bin/bash -c "$podCmd" || {
@@ -187,6 +205,7 @@ do
         continue
     }
     echo
+    echo --------------------------------------------------------
     echo INFO: Restarting the services at pod: $pod:
     echo INFO: Executing: kubectl exec $pod -n $nameSpace -- /bin/bash -c \"$restartCmd\"
     kubectl exec $pod -n $nameSpace -- /bin/bash -c "$restartCmd" || {
