@@ -155,13 +155,15 @@ _createPatchFiles(){
     for patchNum in $patchList
     do
         patchFile=/tmp/$patchNum.patch
-        patchFileList="$patchFileList $patchFileList"
+        patchFileList="$patchFileList $patchFile"
         echo "INFO: Downloading a temporary patchFile at: $patchFile"
         curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/$patchNum.patch -o $patchFile
     done
 }
 
 _createPatchFiles
+
+echo "DEBUG: patchFileList: $patchFileList"
 
 # Build full lists of files altered by the given set of patch files to be applied
 srcFileList=""
