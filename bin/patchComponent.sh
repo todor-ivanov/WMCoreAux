@@ -7,6 +7,7 @@ usage()
     echo -e "Usage: \n ./patchComponent [-z] [-f <patchFile>] <patchNum> <patchNum> ..."
     echo -e "        -z - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
     echo -e "        -f - apply the specified patch file. No multiple files supported. If opt is repeated only the last one will be considered."
+    echo -e "        -n - Do not zero the code base neither from TAG nor from Master branch, just apply the patch"
     echo -e ""
     echo -e " NOTE: We do not support patching from file and patching from command line simultaneously"
     echo -e "       If both provided at the command line patching from command line takes precedence"
@@ -22,14 +23,18 @@ usage()
 
 # Add default value for zeroOnly option
 zeroOnly=false
+zeroCodeBase=true
 extPatchFile=""
-while getopts ":f:zh" opt; do
+while getopts ":f:znh" opt; do
     case ${opt} in
         f)
             extPatchFile=$OPTARG
             ;;
         z)
             zeroOnly=true
+            ;;
+        n)
+            zeroCodeBase=false
             ;;
         h)
             usage
@@ -193,17 +198,19 @@ do
     done
 done
 
-echo
-echo "INFO: Refreshing all files which are to be patched from the origin and TAG: $currTag"
-echo
 
-# First create destination for test files from currTag if missing
-_createTestFilesDst $currTag $testFileList
+$zeroCodeBase && {
+    echo
+    echo "INFO: Refreshing all files which are to be patched from the origin and TAG: $currTag"
+    echo
+
+    # First create destination for test files from currTag if missing
+    _createTestFilesDst $currTag $testFileList
 
 
-# Then zero code base for source files from currTag
-_zeroCodeBase $currTag $srcFileList
-
+    # Then zero code base for source files from currTag
+    _zeroCodeBase $currTag $srcFileList
+}
 
 # exit if the user has requested to only zero the code base
 $zeroOnly && exit
@@ -239,6 +246,8 @@ else
     echo WARNING: between the current PR and the tag deployed at the host/container.
     echo
     echo
+    # exit at this stage if the user has requested  to patch without zeroing the code base
+    $zeroCodeBase || exit
     echo WARNING: TRYING TO START FROM ORIGIN/MASTER BRANCH INSTEAD:
     echo
     echo
