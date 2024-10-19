@@ -236,7 +236,7 @@ err=0
 echo
 echo
 echo --------------------------------------------------------
-echo "INFO: Patching all files starting from the original version of TAG: $currTag"
+echo "INFO: Patching all files starting from the $($zeroCodeBase && echo original version of TAG: $currTag || echo current version of files)"
 for patchFile  in $patchFileList
 do
     echo
