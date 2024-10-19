@@ -2,23 +2,27 @@
 
 usage()
 {
-    echo -e "\nA simple script to facilitate component patching\n"
-    echo -e "and to decrease the development && testing turnaround time.\n"
+    echo -e "\nA simple script to facilitate component patching"
+    echo -e "and to decrease the development && testing turnaround time."
     echo -e "Usage: \n ./patchComponent [-z] [-f <patchFile>] <patchNum> <patchNum> ..."
-    echo -e "      -z  - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied\n"
-    echo -e "      -f  - apply the specified patch file"
+    echo -e "        -z - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
+    echo -e "        -f - apply the specified patch file. No multiple files supported. If opt is repeated only the last one will be considered."
+    echo -e ""
+    echo -e " NOTE: We do not support patching from file and patching from command line simultaneously"
+    echo -e "       If both provided at the command line patching from command line takes precedence"
+    echo -e ""
     echo -e "Examples: \n"
-    echo -e "\t sudo ./patchComponent.sh 11270 12120 \n"
-    echo -e "\t sudo ./patchComponent.sh -f /tmp/11270.patch \n"
-    echo -e "\t git diff --no-color | sudo ./patchComponent.sh \n or:\n"
-    echo -e "\t curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
+    echo -e "\t      sudo ./patchComponent.sh 11270 12120"
+    echo -e "\t      sudo ./patchComponent.sh -f /tmp/11270.patch"
+    echo -e "\t      git diff --no-color | sudo ./patchComponent.sh"
+    echo -e "\t      curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | sudo ./patchComponent.sh \n"
 }
 
 
 
 # Add default value for zeroOnly option
 zeroOnly=false
-
+extPatchFile=""
 while getopts ":f:zh" opt; do
     case ${opt} in
         f)
@@ -31,11 +35,13 @@ while getopts ":f:zh" opt; do
             usage
             exit 0 ;;
         \? )
-            echo "\nERROR: Invalid Option: -$OPTARG\n"
-            ;;
+            echo -e "\nERROR: Invalid Option: -$OPTARG\n"
+            usage
+            exit 1 ;;
         : )
-            echo "\nERROR: Invalid Option: -$OPTARG requires an argument\n"
-            ;;
+            echo -e "\nERROR: Invalid Option: -$OPTARG requires an argument\n"
+            usage
+            exit 1 ;;
     esac
 done
 # shift to the last  parsed option, so we can consume the patchNum with a regular shift
@@ -49,11 +55,8 @@ if [ -t 0 ] ; then pipe=false; else pipe=true ; fi
 patchList=$*
 # [[ -z $patchList ]] && patchList="temp"
 
-echo "INFO: Patching WMCore code with PRs: $patchList"
-
 currTag=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
 echo "INFO: Current WMCoreTag: $currTag"
-
 
 # Find all possible locations for the component source
 # NOTE: We always consider PYTHONPATH first
@@ -136,7 +139,8 @@ _createPatchFiles(){
 
     # Check if we are running from a pipe
     $pipe && {
-        patchFile="/tmp/pipeTmp.patch"
+        echo "INFO: Patching WMCore code from StdIn"
+        patchFile="/tmp/pipeTmp_$(id -u).patch"
         patchFileList=$patchFile
         echo "INFO: Creating a temporary patchFile from stdin at: $patchFile"
         cat <&0 > $patchFile
@@ -145,13 +149,15 @@ _createPatchFiles(){
 
     # Check if we were sent a file to patch from
     [[ -n $extPatchFile ]] && {
+        echo "INFO: Patching WMCore code with file: $extPatchFile"
         patchFile=$extPatchFile
         patchFileList=$patchFile
         echo "INFO: Using command line provided patch file: $patchFile"
         return
     }
 
-    # Finally build the list of patch files to be applied from the patchNums provided at the command line
+    # Finally, if none of the above, build the list of patch files to be applied from the patchNums provided at the command line
+    echo "INFO: Patching WMCore code with PRs: $patchList"
     for patchNum in $patchList
     do
         patchFile=/tmp/$patchNum.patch
@@ -185,7 +191,6 @@ do
     do
         file=${file#a\/test\/python\/} && testFileList="$srcFileList $file"
     done
-
 done
 
 echo
