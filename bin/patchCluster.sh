@@ -3,22 +3,27 @@
 usage()
 {
     echo -e "\nA simple script to be used for patching all Running backends in"
-    echo -e "a WMCore central services K8 cluster with a patch based on an upstream PR"
-    echo -e "Usage: \n ./patchCluster.sh [-z] [-f <patchFile>] [-p <\"SpaceSepListOfPods\">] [-s <serviceName>] 12077 12120 ..."
-    echo -e "        -p - Space separated list of pods to be patched (Mind the quotation marks)"
-    echo -e "        -s - Service name whose pods to be patched (if found)"
-    echo -e "        -z - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
-    echo -e "        -f - apply the specified patch file. No multiple files supported. If opt is repeated only the last one will be considered."
-    echo -e "        -n - Do not zero the code base neither from TAG nor from Master branch, just apply the patch"
+    echo -e "a WMCore central services K8 cluster with a patch based on:"
+    echo -e "  * A list of upstream PRs (the order of applying them matters) or "
+    echo -e "  * A patch file provided or"
+    echo -e "  * A patch created from StdIn"
     echo -e ""
-    echo -e " NOTE: We do not support patching from file and patching from command line simultaneously"
+    echo -e "Usage: ./patchCluster.sh [-n] [-z] [-f <patchFile>] [-p <\"SpaceSepListOfPods\">] [-s <serviceName>] 12077 12120 ..."
+    echo -e ""
+    echo -e "       -p - Space separated list of pods to be patched (Mind the quotation marks)"
+    echo -e "       -s - Service name whose pods to be patched (if found)"
+    echo -e "       -z - Only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
+    echo -e "       -f - Apply the specified patch file. No multiple files supported. If opt is repeated only the last one will be considered."
+    echo -e "       -n - Do not zero the code base neither from TAG nor from Master branch, just apply the patch"
+    echo -e ""
+    echo -e "NOTE: We do not support patching from file and patching from command line simultaneously"
     echo -e "       If both provided at the command line patching from command line takes precedence"
     echo -e ""
     echo -e "Examples: \n"
-    echo -e "\t      ./patchCluster.sh -s reqmgr2 11270 12120 \n"
-    echo -e "\t      ./patchCluster.sh -p pod/reqmgr2-bcdccd8c6-hsmlj -f /tmp/11270.patch \n"
-    echo -e "\t      git diff --no-color | ./patchCluster.sh -s reqmgr2 \n"
-    echo -e "\t      curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | ./patchCluster.sh -s reqmgr2 \n"
+    echo -e "       ./patchCluster.sh -s reqmgr2 11270 12120 \n"
+    echo -e "       ./patchCluster.sh -p pod/reqmgr2-bcdccd8c6-hsmlj -f /tmp/11270.patch \n"
+    echo -e "       git diff --no-color | ./patchCluster.sh -s reqmgr2 -n \n"
+    echo -e "       curl https://patch-diff.githubusercontent.com/raw/dmwm/WMCore/pull/11270.patch | ./patchCluster.sh -s reqmgr2 \n"
 
 }
 
@@ -154,7 +159,7 @@ $pipe && { patchFile="/tmp/pipeTmp_$(id -u).patch"
            echo "INFO: Creating a temporary patchFile from stdin at: $patchFile"
            cat <&0 > $patchFile
            exec 0<>/dev/tty
-           # the flag bellow is just for debugging purposes, never used after the printout
+           # The flag bellow is just for debugging purposes, never used after the printout
            [[ -t 0 ]] && newPipeFlag=false || newPipeFlag=true
            echo DEBUG: newPipeFlag=$newPipeFlag
            }
