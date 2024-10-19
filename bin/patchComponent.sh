@@ -61,6 +61,8 @@ patchList=$*
 # [[ -z $patchList ]] && patchList="temp"
 
 currTag=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
+echo
+echo ========================================================
 echo "INFO: Current WMCoreTag: $currTag"
 
 # Find all possible locations for the component source
@@ -75,6 +77,8 @@ done
 
 [[ -z $pythonLibPath  ]] && { echo "ERROR: Could not find WMCore source to patch"; exit  1 ;}
 echo "INFO: Current PythonLibPath: $pythonLibPath"
+echo --------------------------------------------------------
+echo
 
 # Set patch command parameters
 stripLevel=3
@@ -144,7 +148,11 @@ _createPatchFiles(){
 
     # Check if we are running from a pipe
     $pipe && {
-        echo "INFO: Patching WMCore code from StdIn"
+        if $zeroOnly ;then
+            echo "INFO: Zeroing WMCore code base from StdIn"
+        else
+            echo "INFO: Patching WMCore code from StdIn"
+        fi
         patchFile="/tmp/pipeTmp_$(id -u).patch"
         patchFileList=$patchFile
         echo "INFO: Creating a temporary patchFile from stdin at: $patchFile"
@@ -154,7 +162,11 @@ _createPatchFiles(){
 
     # Check if we were sent a file to patch from
     [[ -n $extPatchFile ]] && {
-        echo "INFO: Patching WMCore code with file: $extPatchFile"
+        if $zeroOnly ;then
+            echo "INFO: Zeroing WMCore code base with file: $extPatchFile"
+        else
+            echo "INFO: Patching WMCore code with file: $extPatchFile"
+        fi
         patchFile=$extPatchFile
         patchFileList=$patchFile
         echo "INFO: Using command line provided patch file: $patchFile"
@@ -162,7 +174,11 @@ _createPatchFiles(){
     }
 
     # Finally, if none of the above, build the list of patch files to be applied from the patchNums provided at the command line
-    echo "INFO: Patching WMCore code with PRs: $patchList"
+    if $zeroOnly ; then
+        echo "INFO: Zeroing WMCore code base with PRs: $patchList"
+    else
+        echo "INFO: Patching WMCore code with PRs: $patchList"
+    fi
     for patchNum in $patchList
     do
         patchFile=/tmp/$patchNum.patch
@@ -201,6 +217,7 @@ done
 
 $zeroCodeBase && {
     echo
+    echo --------------------------------------------------------
     echo "INFO: Refreshing all files which are to be patched from the origin and TAG: $currTag"
     echo
 
@@ -218,11 +235,13 @@ $zeroOnly && exit
 err=0
 echo
 echo
+echo --------------------------------------------------------
 echo "INFO: Patching all files starting from the original version of TAG: $currTag"
 for patchFile  in $patchFileList
 do
     echo
     echo
+    echo --------------------------------------------------------
     echo "INFO: ----------------- Currently applying patch: $patchNum -----------------"
     echo "INFO: cat $patchFile | $patchCmd"
     cat $patchFile | $patchCmd
@@ -260,6 +279,7 @@ fi
 # to be patched from master and hope there are no conflicts in the PR.
 
 echo
+echo --------------------------------------------------------
 echo "WARNING: Refreshing all files which are to be patched from origin/master branch:"
 echo
 
@@ -272,6 +292,7 @@ _zeroCodeBase "master" $srcFileList
 err=0
 echo
 echo
+echo --------------------------------------------------------
 echo "WARNING: Patching all files starting from origin/master branch"
 for patchFile in $patchFileList
 do

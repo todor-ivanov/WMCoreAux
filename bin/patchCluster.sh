@@ -9,6 +9,7 @@ usage()
     echo -e "        -s - Service name whose pods to be patched (if found)"
     echo -e "        -z - only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
     echo -e "        -f - apply the specified patch file. No multiple files supported. If opt is repeated only the last one will be considered."
+    echo -e "        -n - Do not zero the code base neither from TAG nor from Master branch, just apply the patch"
     echo -e ""
     echo -e " NOTE: We do not support patching from file and patching from command line simultaneously"
     echo -e "       If both provided at the command line patching from command line takes precedence"
@@ -25,8 +26,9 @@ usage()
 currPods=""
 currService=""
 zeroOnly=false
+zeroCodeBase=true
 extPatchFile=""
-while getopts ":f:p:s:zh" opt; do
+while getopts ":f:p:s:znh" opt; do
     case ${opt} in
         p)
             currPods=$OPTARG
@@ -39,6 +41,9 @@ while getopts ":f:p:s:zh" opt; do
             ;;
         z)
             zeroOnly=true
+            ;;
+        n)
+            zeroCodeBase=false
             ;;
         h)
             usage
@@ -63,27 +68,28 @@ shift $(expr $OPTIND - 1 )
 if [ -t 0 ] ; then pipe=false; else pipe=true ; fi
 
 patchNum=$*
-if $zeroOnly; then
-    echo ========================================================
-    echo "INFO: Only Zeroing the code base No patches will be applied"
-elif $pipe ;then
-    echo ========================================================
-    echo "INFO: Patching from StdIn"
-elif [[ -z $patchNum ]] ; then
-    echo ========================================================
-    echo "ERROR: No patchNum provided and not patching from StdIn"
-    exit
-else
-    echo ========================================================
-    echo "INFO: Applying patch: $patchNum"
-fi
 
 currCluster=`kubectl config get-clusters |grep -v NAME`
 nameSpace=dmwm
 
 echo ========================================================
-echo INFO: CLUSTER: $currCluster
+echo "INFO: CLUSTER: $currCluster"
 echo --------------------------------------------------------
+
+if $zeroOnly; then
+    echo "INFO: Only Zeroing the code base No patches will be applied"
+    echo "INFO: Source files affected to be taken from patches: $patchNum"
+elif $pipe ;then
+    echo "INFO: Patching from StdIn"
+elif [[ -n $extPatchFile ]]; then
+    echo "INFO: Patching from file: $extPatchFile"
+elif [[ -z $patchNum ]] ; then
+    echo "ERROR: Neither patchNum provided nor patchFile nor patching from StdIn"
+    exit
+else
+    echo "INFO: Applying patches: $patchNum"
+fi
+
 
 # First try to find any pod from the service name provided and then extend the list in currPods:
 if [[ -n $currService ]]; then
@@ -95,10 +101,10 @@ if [[ -n $currService ]]; then
         for pod in $servicePods; do
             currPods="$currPods ${pod#pod/}"
         done
-        echo "INFO: Found the following pods for service: $currService: "
+        echo "INFO: Found the following pods for SERVICE: $currService: "
         echo "$servicePods "
     else
-        echo "WARNING: No pods found for service: $currService"
+        echo "WARNING: No pods found for SERVICE: $currService"
         exit
     fi
 fi
@@ -106,11 +112,11 @@ fi
 if [[ -n $currPods ]] ; then
     echo ========================================================
     echo WARNING: We are about to patch backend pods: $currPods
-    echo WARNING: at k8 cluster: $currCluster with patchNum: $patchNum
+    echo WARNING: at k8 CLUSTER: $currCluster !!!!
 else
     echo ========================================================
     echo WARNING: We are about to patch ANY running backend pod
-    echo WARNING: at k8 cluster: $currCluster with patchNum: $patchNum
+    echo WARNING: at k8 CLUSTER: $currCluster !!!!
 fi
 
 echo WARNING: Are you sure you want to continue?
@@ -128,6 +134,8 @@ podCmdActions="wget https://raw.githubusercontent.com/todor-ivanov/WMCoreAux/mas
 podCmdOpts=""
 patchFile=""
 $zeroOnly && podCmdOpts="$podCmdOpts -z"
+$zeroCodeBase || podCmdOpts="$podCmdOpts -n"
+
 [[ -n $extPatchFile ]] && { patchFile="/tmp/`basename $extPatchFile`"
                             podCmdOpts="$podCmdOpts -f $patchFile" ;}
 $pipe && { patchFile="/tmp/pipeTmp_$(id -u).patch"
