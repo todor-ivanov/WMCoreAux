@@ -64,7 +64,7 @@ while getopts ":f:p:s:znh" opt; do
     esac
 done
 
-# shift to the last  parsed option, so we can consume the patchNum with a regular shift
+# shift to the last  parsed option, so we can consume the patchList with a regular shift
 shift $(expr $OPTIND - 1 )
 
 
@@ -72,62 +72,31 @@ shift $(expr $OPTIND - 1 )
 # if fd 0 (stdin) is open but does not refer to the terminal - then we are running the script through a pipe
 if [ -t 0 ] ; then pipe=false; else pipe=true ; fi
 
-patchNum=$*
+patchList=$*
 
 currCluster=`kubectl config get-clusters |grep -v NAME`
 nameSpace=dmwm
 
+echo
+echo
+echo
 echo ========================================================
 echo "INFO: CLUSTER: $currCluster"
 echo --------------------------------------------------------
 
 if $zeroOnly; then
     echo "INFO: Only Zeroing the code base No patches will be applied"
-    echo "INFO: Source files affected to be taken from patches: $patchNum"
+    echo "INFO: Source files affected to be taken from patches: $patchList"
 elif $pipe ;then
     echo "INFO: Patching from StdIn"
 elif [[ -n $extPatchFile ]]; then
     echo "INFO: Patching from file: $extPatchFile"
-elif [[ -z $patchNum ]] ; then
-    echo "ERROR: Neither patchNum provided nor patchFile nor patching from StdIn"
+elif [[ -z $patchList ]] ; then
+    echo "ERROR: Neither patchList provided nor patchFile nor patching from StdIn"
     exit
 else
-    echo "INFO: Applying patches: $patchNum"
+    echo "INFO: Applying patches: $patchList"
 fi
-
-
-# First try to find any pod from the service name provided and then extend the list in currPods:
-if [[ -n $currService ]]; then
-    servicePods=`kubectl -n $nameSpace  get ep $currService -o=jsonpath='{.subsets[*].addresses[*].ip}' | tr ' ' '\n' | xargs -I % kubectl -n $nameSpace get pods  -o=name --field-selector=status.podIP=%`
-    [[ $? -eq 0 ]] || { echo "WARNING: could not find service: $currService at cluster: $currCluster"; exit ;}
-
-    # We need to trim the `pod/` prefix from every pod's name produced with the above command
-    if [[ -n $servicePods ]] ; then
-        for pod in $servicePods; do
-            currPods="$currPods ${pod#pod/}"
-        done
-        echo "INFO: Found the following pods for SERVICE: $currService: "
-        echo "$servicePods "
-    else
-        echo "WARNING: No pods found for SERVICE: $currService"
-        exit
-    fi
-fi
-
-if [[ -n $currPods ]] ; then
-    echo ========================================================
-    echo WARNING: We are about to patch backend pods: $currPods
-    echo WARNING: at k8 CLUSTER: $currCluster !!!!
-else
-    echo ========================================================
-    echo WARNING: We are about to patch ANY running backend pod
-    echo WARNING: at k8 CLUSTER: $currCluster !!!!
-fi
-
-echo WARNING: Are you sure you want to continue?
-echo -n "[y/n](Default n): "
-read x && [[ $x =~ (y|yes|Yes|YES) ]] || { echo WARNING: Exit on user request!; exit 101 ;}
-echo ========================================================
 
 
 # -----------------------------------------------------------
@@ -161,15 +130,51 @@ $pipe && { patchFile="/tmp/pipeTmp_$(id -u).patch"
            exec 0<>/dev/tty
            # The flag bellow is just for debugging purposes, never used after the printout
            [[ -t 0 ]] && newPipeFlag=false || newPipeFlag=true
-           echo DEBUG: newPipeFlag=$newPipeFlag
+           echo
+           echo "DEBUG: newPipeFlag=$newPipeFlag"
            }
 
-podCmd="$podCmdActions && sudo /data/patchComponent.sh $podCmdOpts $patchNum "
+podCmd="$podCmdActions && sudo /data/patchComponent.sh $podCmdOpts $patchList "
 restartCmd="/data/manage restart && sleep 1 && /data/manage status"
 
 echo
-echo DEBUG: podCmd: $podCmd
+echo "DEBUG: podCmd: $podCmd"
+echo
 # -----------------------------------------------------------
+
+echo --------------------------------------------------------
+# First try to find any pod from the service name provided and then extend the list in currPods:
+if [[ -n $currService ]]; then
+    servicePods=`kubectl -n $nameSpace  get ep $currService -o=jsonpath='{.subsets[*].addresses[*].ip}' | tr ' ' '\n' | xargs -I % kubectl -n $nameSpace get pods  -o=name --field-selector=status.podIP=%`
+    [[ $? -eq 0 ]] || { echo "WARNING: could not find service: $currService at cluster: $currCluster"; exit ;}
+
+    # We need to trim the `pod/` prefix from every pod's name produced with the above command
+    if [[ -n $servicePods ]] ; then
+        for pod in $servicePods; do
+            currPods="$currPods ${pod#pod/}"
+        done
+        echo "INFO: Found the following pods for SERVICE: $currService: "
+        echo "$servicePods "
+    else
+        echo "WARNING: No pods found for SERVICE: $currService"
+        exit
+    fi
+fi
+
+if [[ -n $currPods ]] ; then
+    echo ========================================================
+    echo WARNING: We are about to patch backend pods: $currPods
+    echo WARNING: at k8 CLUSTER: $currCluster !!!!
+else
+    echo ========================================================
+    echo WARNING: We are about to patch ANY running backend pod
+    echo WARNING: at k8 CLUSTER: $currCluster !!!!
+fi
+
+echo WARNING: Are you sure you want to continue?
+echo -n "[y/n](Default n): "
+read x && [[ $x =~ (y|yes|Yes|YES) ]] || { echo WARNING: Exit on user request!; exit 101 ;}
+echo ========================================================
 
 
 if [[ -n $currPods ]] ; then

@@ -65,6 +65,9 @@ patchList=$*
 # [[ -z $patchList ]] && patchList="temp"
 
 currTag=$(python -c "from WMCore import __version__ as WMCoreVersion; print(WMCoreVersion)")
+
+echo
+echo
 echo
 echo ========================================================
 echo "INFO: Current WMCoreTag: $currTag"
