@@ -30,16 +30,20 @@ usage()
 # Set defaults
 currPods=""
 currService=""
+currDeployment=""
 zeroOnly=false
 zeroCodeBase=true
 extPatchFile=""
-while getopts ":f:p:s:znh" opt; do
+while getopts ":f:p:s:d:znh" opt; do
     case ${opt} in
         p)
             currPods=$OPTARG
             ;;
         s)
             currService=$OPTARG
+            ;;
+        d)
+            currDeployment=$OPTARG
             ;;
         f)
             extPatchFile=$OPTARG
@@ -160,6 +164,26 @@ if [[ -n $currService ]]; then
         exit
     fi
 fi
+
+# Second try to find any pod from the deployment name provided and then extend the list in currPods:
+if [[ -n $currDeployment ]]; then
+    deploymentPods=`kubectl get --raw "/apis/apps/v1/namespaces/dmwm/deployments/$currDeployment/scale"|jq -r .status.selector | xargs -I % kubectl -n $nameSpace get pods  -o=name --selector=%`
+    [[ $? -eq 0 ]] || { echo "WARNING: could not find deployment: $currDeployment at cluster: $currCluster"; exit ;}
+
+    # We need to trim the `pod/` prefix from every pod's name produced with the above command
+    if [[ -n $deploymentPods ]] ; then
+        for pod in $deploymentPods; do
+            currPods="$currPods ${pod#pod/}"
+        done
+        echo "INFO: Found the following pods for DEPLOYMENT: $currDeployment: "
+        echo "$deploymentPods "
+    else
+        echo "WARNING: No pods found for DEPLOYMENT: $currDeployment"
+        exit
+    fi
+fi
+
+
 
 if [[ -n $currPods ]] ; then
     echo ========================================================
