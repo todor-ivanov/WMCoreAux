@@ -12,6 +12,7 @@ usage()
     echo -e ""
     echo -e "       -p - Space separated list of pods to be patched (Mind the quotation marks)"
     echo -e "       -s - Service name whose pods to be patched (if found)"
+    echo -e "       -d - Deployment name whose pods to be patched (if found)"
     echo -e "       -z - Only zero the code base to the currently deployed tag for the files changed in the patch - no actual patches will be applied"
     echo -e "       -f - Apply the specified patch file. No multiple files supported. If opt is repeated only the last one will be considered."
     echo -e "       -n - Do not zero the code base neither from TAG nor from Master branch, just apply the patch"
