@@ -217,7 +217,7 @@ do
 
     for file in $testFileListTemp
     do
-        file=${file#a\/test\/python\/} && testFileList="$srcFileList $file"
+        file=${file#a\/test\/python\/} && testFileList="$testFileList $file"
     done
 done
 
