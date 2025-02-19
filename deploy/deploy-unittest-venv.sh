@@ -3,16 +3,16 @@ help(){
     cat <<EOF
     Usage:
 
-    source deploy_unittest_venv.sh [-d] <WMAgent.venv path> [-h]
+    source deploy-unittest-venv.sh [-d] <WMAgent.venv path> [-h]
 
       -d <WMAgent.venv path>         WMAgent virtual environment root path [Default: ./WMAgent.venv3 if not Activated else \$WMA_ROOT_DIR]
       -h <help>                      Provides help to the current script
 
     # Example: Deploy untittest environment at /data/WMAgent.venv3/:
-    #          source ./deploy_unttest_venv.sh -d /data/WMAgent.venv3/
+    #          source ./deploy-unttest-venv.sh -d /data/WMAgent.venv3/
 
     # Example: Deploy untittest inside previously activated WMAgent virtual environment:
-    #          source ./deploy_unttest_venv.sh
+    #          source ./deploy-unttest-venv.sh
 
     # Example: Running a single unittest upon sourcing:
     #          ipython -i \$WMA_DEPLOY_DIR/srv/WMCore/test/python/WMCore_t/Services_t/WorkQueue_t/WorkQueue_t.py
@@ -75,7 +75,7 @@ echo "Activating: . $venvPath/bin/activate"
 pip install nose
 
 # Loading WMAgent.secrets file
-. ./bin/manage-common.sh
+. $venvPath/bin/manage-common.sh
 _load_wmasecrets
 
 # Setting up WMCore related environment variables:
