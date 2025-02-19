@@ -87,6 +87,7 @@ _addWMCoreVenvVar COUCHURL        http://$COUCH_USER:$COUCH_PASS@$COUCH_HOST:$CO
 _WMCoreVenvSet
 
 # Setting up the database to be used for the unttests
-docker exec -u root -it  mariadb bash -c "mariadb --socket=\$MDB_SOCKET_FILE --execute \"CREATE DATABASE $MDB_UNITTEST_DB\""
+
+docker exec -u root -it  mariadb bash -c "mariadb --socket=\$MDB_SOCKET_FILE --execute \"CREATE DATABASE IF NOT EXISTS $MDB_UNITTEST_DB\""
 docker exec -u root -it  mariadb bash -c "mariadb --socket=\$MDB_SOCKET_FILE --execute \"GRANT ALL ON $MDB_UNITTEST_DB.* TO $MDB_USER@localhost\""
 docker exec -u root -it  mariadb bash -c "mariadb --socket=\$MDB_SOCKET_FILE --execute \"GRANT ALL ON $MDB_UNITTEST_DB.* TO $MDB_USER@127.0.0.1\""
