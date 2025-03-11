@@ -1,0 +1,570 @@
+{
+  "dataset_conf_list": [
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake"
+    }
+  ],
+  "file_conf_list": [
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/980871d5-87f8-43e4-8cc2-9af21daddd6f.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/14d3353a-0f36-4b65-aa91-0de641e3cdd7.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/90a2f3cd-347e-41ef-b5b5-9f9a53091d83.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/ae4551f1-1781-42bc-aa78-cff4414c09fe.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/b587b7f3-2711-44cb-9990-a84082f6c8d9.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/c8957bb3-1388-42eb-92aa-9493723184e2.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/2720e3d5-9c3e-40e4-88b8-0b096dfc45dc.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/78ce3a7a-e681-4070-b5f4-47f7e3bb223b.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/b4c1bd0e-2943-4dc4-97e7-df63cb93fa93.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/4cc374a2-2292-4553-9f7f-5c45e964902a.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/82a18994-f322-434c-a1b1-6268f2fec205.root"
+    },
+    {
+      "release_version": "CMSSW_14_0_15",
+      "pset_hash": "GIBBERISH",
+      "app_name": "cmsRun",
+      "output_module_label": "write_AlCaP0_RAW",
+      "global_tag": "fake",
+      "lfn": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/2f940373-c939-4b51-b1ef-c4d92638ad68.root"
+    }
+  ],
+  "files": [
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/980871d5-87f8-43e4-8cc2-9af21daddd6f.root",
+      "file_size": 2269006914,
+      "event_count": 1921520,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "6eab467d",
+      "check_sum": "2605783523",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1142,
+          "run_num": 385934,
+          "event_count": 483317
+        },
+        {
+          "lumi_section_num": 1143,
+          "run_num": 385934,
+          "event_count": 481916
+        },
+        {
+          "lumi_section_num": 1144,
+          "run_num": 385934,
+          "event_count": 476324
+        },
+        {
+          "lumi_section_num": 1145,
+          "run_num": 385934,
+          "event_count": 479963
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/14d3353a-0f36-4b65-aa91-0de641e3cdd7.root",
+      "file_size": 2269581448,
+      "event_count": 1922830,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "ef3d9859",
+      "check_sum": "2411982534",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1146,
+          "run_num": 385934,
+          "event_count": 478860
+        },
+        {
+          "lumi_section_num": 1147,
+          "run_num": 385934,
+          "event_count": 481601
+        },
+        {
+          "lumi_section_num": 1148,
+          "run_num": 385934,
+          "event_count": 481538
+        },
+        {
+          "lumi_section_num": 1149,
+          "run_num": 385934,
+          "event_count": 480831
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/90a2f3cd-347e-41ef-b5b5-9f9a53091d83.root",
+      "file_size": 2263423941,
+      "event_count": 1918003,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "9e445606",
+      "check_sum": "2786539864",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1150,
+          "run_num": 385934,
+          "event_count": 480201
+        },
+        {
+          "lumi_section_num": 1151,
+          "run_num": 385934,
+          "event_count": 479254
+        },
+        {
+          "lumi_section_num": 1152,
+          "run_num": 385934,
+          "event_count": 479729
+        },
+        {
+          "lumi_section_num": 1153,
+          "run_num": 385934,
+          "event_count": 478819
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/ae4551f1-1781-42bc-aa78-cff4414c09fe.root",
+      "file_size": 2251983668,
+      "event_count": 1908753,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "4447f736",
+      "check_sum": "885477408",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1154,
+          "run_num": 385934,
+          "event_count": 479084
+        },
+        {
+          "lumi_section_num": 1155,
+          "run_num": 385934,
+          "event_count": 478652
+        },
+        {
+          "lumi_section_num": 1156,
+          "run_num": 385934,
+          "event_count": 475059
+        },
+        {
+          "lumi_section_num": 1157,
+          "run_num": 385934,
+          "event_count": 475958
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/b587b7f3-2711-44cb-9990-a84082f6c8d9.root",
+      "file_size": 2270622321,
+      "event_count": 1936739,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "8f7431de",
+      "check_sum": "2391798171",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1162,
+          "run_num": 385934,
+          "event_count": 483704
+        },
+        {
+          "lumi_section_num": 1163,
+          "run_num": 385934,
+          "event_count": 484022
+        },
+        {
+          "lumi_section_num": 1164,
+          "run_num": 385934,
+          "event_count": 484936
+        },
+        {
+          "lumi_section_num": 1165,
+          "run_num": 385934,
+          "event_count": 484077
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/c8957bb3-1388-42eb-92aa-9493723184e2.root",
+      "file_size": 2263118155,
+      "event_count": 1931149,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "93c9339e",
+      "check_sum": "3894997216",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1166,
+          "run_num": 385934,
+          "event_count": 484095
+        },
+        {
+          "lumi_section_num": 1167,
+          "run_num": 385934,
+          "event_count": 484002
+        },
+        {
+          "lumi_section_num": 1168,
+          "run_num": 385934,
+          "event_count": 484722
+        },
+        {
+          "lumi_section_num": 1169,
+          "run_num": 385934,
+          "event_count": 478330
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/2720e3d5-9c3e-40e4-88b8-0b096dfc45dc.root",
+      "file_size": 2267778034,
+      "event_count": 1936722,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "bd294b3b",
+      "check_sum": "2794600993",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1170,
+          "run_num": 385934,
+          "event_count": 484009
+        },
+        {
+          "lumi_section_num": 1171,
+          "run_num": 385934,
+          "event_count": 484227
+        },
+        {
+          "lumi_section_num": 1172,
+          "run_num": 385934,
+          "event_count": 482955
+        },
+        {
+          "lumi_section_num": 1173,
+          "run_num": 385934,
+          "event_count": 485531
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/78ce3a7a-e681-4070-b5f4-47f7e3bb223b.root",
+      "file_size": 2266573364,
+      "event_count": 1934910,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "85503f08",
+      "check_sum": "344540777",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1174,
+          "run_num": 385934,
+          "event_count": 485205
+        },
+        {
+          "lumi_section_num": 1175,
+          "run_num": 385934,
+          "event_count": 483519
+        },
+        {
+          "lumi_section_num": 1176,
+          "run_num": 385934,
+          "event_count": 483411
+        },
+        {
+          "lumi_section_num": 1177,
+          "run_num": 385934,
+          "event_count": 482775
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/b4c1bd0e-2943-4dc4-97e7-df63cb93fa93.root",
+      "file_size": 2421047292,
+      "event_count": 2081505,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "c6672d37",
+      "check_sum": "3601651998",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1213,
+          "run_num": 385934,
+          "event_count": 467500
+        },
+        {
+          "lumi_section_num": 1214,
+          "run_num": 385934,
+          "event_count": 467606
+        },
+        {
+          "lumi_section_num": 1215,
+          "run_num": 385934,
+          "event_count": 425152
+        },
+        {
+          "lumi_section_num": 1216,
+          "run_num": 385934,
+          "event_count": 364804
+        },
+        {
+          "lumi_section_num": 1217,
+          "run_num": 385934,
+          "event_count": 356443
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/4cc374a2-2292-4553-9f7f-5c45e964902a.root",
+      "file_size": 2360593693,
+      "event_count": 2031892,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "ca031ca9",
+      "check_sum": "757664904",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 1218,
+          "run_num": 385934,
+          "event_count": 320909
+        },
+        {
+          "lumi_section_num": 1219,
+          "run_num": 385934,
+          "event_count": 298057
+        },
+        {
+          "lumi_section_num": 1220,
+          "run_num": 385934,
+          "event_count": 293210
+        },
+        {
+          "lumi_section_num": 1221,
+          "run_num": 385934,
+          "event_count": 263979
+        },
+        {
+          "lumi_section_num": 1222,
+          "run_num": 385934,
+          "event_count": 254862
+        },
+        {
+          "lumi_section_num": 1223,
+          "run_num": 385934,
+          "event_count": 298466
+        },
+        {
+          "lumi_section_num": 1224,
+          "run_num": 385934,
+          "event_count": 302409
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/82a18994-f322-434c-a1b1-6268f2fec205.root",
+      "file_size": 2781431015,
+      "event_count": 2329700,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "7cceff44",
+      "check_sum": "674571116",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 767,
+          "run_num": 385934,
+          "event_count": 305989
+        },
+        {
+          "lumi_section_num": 768,
+          "run_num": 385934,
+          "event_count": 508435
+        },
+        {
+          "lumi_section_num": 769,
+          "run_num": 385934,
+          "event_count": 505448
+        },
+        {
+          "lumi_section_num": 770,
+          "run_num": 385934,
+          "event_count": 504915
+        },
+        {
+          "lumi_section_num": 771,
+          "run_num": 385934,
+          "event_count": 504913
+        }
+      ]
+    },
+    {
+      "file_type": "EDM",
+      "logical_file_name": "/store/data/Run2024H/AlCaP0/RAW/v1/000/385/934/00000/2f940373-c939-4b51-b1ef-c4d92638ad68.root",
+      "file_size": 2400822702,
+      "event_count": 2011880,
+      "last_modified_by": "T0Prod",
+      "last_modification_date": 1727467002,
+      "auto_cross_section": 0.0,
+      "adler32": "ef7d5674",
+      "check_sum": "2052432721",
+      "file_lumi_list": [
+        {
+          "lumi_section_num": 964,
+          "run_num": 385934,
+          "event_count": 506164
+        },
+        {
+          "lumi_section_num": 965,
+          "run_num": 385934,
+          "event_count": 504845
+        },
+        {
+          "lumi_section_num": 966,
+          "run_num": 385934,
+          "event_count": 500346
+        },
+        {
+          "lumi_section_num": 967,
+          "run_num": 385934,
+          "event_count": 500525
+        }
+      ]
+    }
+  ],
+  "block": {
+    "block_name": "/AlCaP0/Run2024H-v1/RAW#983e96f3-5dca-4919-a3b4-fa291f145fb7",
+    "origin_site_name": "T0_CH_CERN_Disk",
+    "open_for_writing": 0,
+    "create_by": "T0Prod",
+    "creation_date": 1726759776,
+    "block_size": 28085982547,
+    "file_count": 12
+  },
+  "processing_era": {
+    "processing_version": 1,
+    "create_by": "T0Prod",
+    "description": ""
+  },
+  "acquisition_era": {
+    "acquisition_era_name": "Run2024H",
+    "start_date": 123456789
+  },
+  "primds": {
+    "primary_ds_name": "AlCaP0",
+    "primary_ds_type": "data",
+    "create_by": "T0Prod",
+    "creation_date": 1727467001
+  },
+  "dataset": {
+    "physics_group_name": "NoGroup",
+    "processed_ds_name": "Run2024H-v1",
+    "data_tier_name": "RAW",
+    "dataset_access_type": "VALID",
+    "dataset": "/AlCaP0/Run2024H-v1/RAW",
+    "prep_id": null,
+    "create_by": "T0Prod",
+    "last_modified_by": "T0Prod",
+    "creation_date": 1727467001,
+    "last_modification_date": 1727467001
+  },
+  "file_parent_list": [],
+  "dataset_parent_list": []
+}
