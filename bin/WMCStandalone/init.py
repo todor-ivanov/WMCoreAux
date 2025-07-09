@@ -42,7 +42,7 @@ from Utils.CertTools import ckey as getKey
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from WMCore.REST.Server import RESTArgs
-
+from WMCore.ReqMgr.Utils.Validation import validate_request_update_args, _validate_request_allowed_args
 
 if __name__ == '__main__':
 
@@ -50,7 +50,8 @@ if __name__ == '__main__':
     __WMCStandalone__
 
     usage:
-       ipython -i /data/WMCoreAux/bin/WMCStandalone/init.py -- -c $WMCORE_SERVICE_CONFIG/reqmgr2/config.py
+       ipython -i /data/WMCore.venv3/srv/WMCoreAux/bin/WMCStandalone/init.py -- -c $WMCORE_SERVICE_CONFIG/reqmgr2/config.py
+       ipython -i /data/WMCore.venv3/srv/WMCoreAux/bin/WMCStandalone/init.py -- -c /data/WMCore.venv3/srv/current/config/reqmgr2/config.py
     """
 
     FORMAT = "%(asctime)s:%(levelname)s:%(module)s:%(funcName)s(): %(message)s"
@@ -92,11 +93,16 @@ if __name__ == '__main__':
     info = list(reqInfo.get())[0]
     # pprint(info)
 
-    reqName = 'user_SC_LumiMask_Rules_SiteListsTest_v4_240830_135942_6572'
+    reqName = 'cmsunified_task_GEN-RunIII2024Summer24wmLHEGS-Backfill-00006__v1_T_250516_073817_7152'
     # create a wmworkload spec and load a workflow from couch:
+    breakpoint()
+    # Here to repeat all the steps from validate_request_update_args or later call it directly 
+    request = reqApi.reqmgr_db_service.getRequestByNames(reqName)
+    request = request[reqName]
     workload = WMWorkloadHelper()
     couchUrl = reqApi.config.couch_host + '/' + reqApi.config.couch_reqmgr_db
     workload.loadSpecFromCouch(couchUrl, reqName)
+    workload.setStatus(request['RequestStatus'])
 
     # read/load certificate data:
     with open(getCert(), 'rb') as certFile:
@@ -111,16 +117,19 @@ if __name__ == '__main__':
     # get reqCfonfig:
 
     # change request arguments No - state transition:
-    reqArgs = {'SiteWhitelist': ['T2_CERN_CH','T1_US_FNAL'],
-               'SiteBlacklist': ['T1_US_FNAL'],
-               'RequestPriority': 3 }
-    reqApi._updateRequest(workload, reqArgs)
+    reqArgs = {'SiteWhitelist': ['T2_CERN_CH'],
+               'SiteBlacklist': [],
+               'RequestPriority': 11777 }
+    reqArgsDiff = _validate_request_allowed_args(request, reqArgs)
 
-    # making a proper REST call to the change the request parameeters:
-    qParams = RESTArgs(reqName, reqArgs)
-    safe = RESTArgs(None,{})
+    # reqApi._updateRequest(workload, reqArgs)
+    reqApi._updateRequest(workload, reqArgsDiff)
 
-    workLoadPair = reqApi.validate(reqApi, 'PUT', appName, qParams, safe)
+    # # making a proper REST call to the change the request parameeters:
+    # qParams = RESTArgs(reqName, reqArgs)
+    # safe = RESTArgs(None,{})
+
+    # workLoadPair = reqApi.validate(reqApi, 'PUT', appName, qParams, safe)
     # TODO: The above call is broken. The first parameter is wrong - to be fixed.
     #       The original call:
     #       [05/Sep/2024:11:54:41]  DEBUG: Request: validate: method PUT
