@@ -2,7 +2,7 @@
 
 1. Start with a proper understanding of the problem you have to solve with global (high level) definitions.
 
- **NOTE:** Avoid entering into specific use-cases at this stage.
+    **NOTE:** Avoid entering into specific use-cases at this stage.
 
 2. Draw system boundaries - Are you about to design a general purpose system or
 are you going to design a highly targeted and heavily constrained one:
